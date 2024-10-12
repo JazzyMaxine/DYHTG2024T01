@@ -61,15 +61,16 @@ export default function GameScreen() {
         try {
           const storedScores = await getStoredScores();
           const newScores = [...storedScores, score].sort((a, b) => b - a);
-
+  
           // Save the updated score list
-        await saveScores(newScores);
-        router.push('/scores');
+          await saveScores(newScores);
+          router.push('/scores');
           resetScore();
         } catch (error) {
           console.error('Error saving scores:', error);
         }
       };
+  
       handleSave();
     }
   }, [collision, score, router, resetScore]);
