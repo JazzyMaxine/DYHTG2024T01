@@ -11,7 +11,7 @@ import { generateAsteroids, moveAsteroids, checkCollisions } from '../../utils/g
 import beatmapS from '../../beatmaps/beatmap.json'; // Statically import the beatmap
 
 const HEXAGON_SIDES = 6;
-const BASE_BPM = 120; // Define the base BPM (e.g., 120 BPM for the song)
+const BASE_BPM = beatmapS.bpm; // Define the base BPM (e.g., 120 BPM for the song)
 const beatInterval = (60 / BASE_BPM) * 1000; // Convert BPM to milliseconds
 const ASTEROID_SPAWN_INTERVAL = 2000; // Spawn every 2 seconds (2000ms)
 
