@@ -1,0 +1,25 @@
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/babel.config.js": true,
+        "**/app.json": true,
+        "**/package-lock.json": true,
+        "**/package.json": true,
+        "**/tsconfig.json": false,
+        "**/.history": true,
+        "**/.vscode": true,
+        "**/expo-env.d.ts": true,
+        "**/.gitignore": true,
+        "**/node_modules": true,
+        "app/(tabs)/_layout.tsx": false,
+        "app/_layout.tsx": true,
+        "app/+html.tsx": true,
+        "**/.expo": true
+    },
+    "explorerExclude.backup": {}
+}
