@@ -7,6 +7,7 @@ import Hexagon from '../../components/Hexagon';
 import Spaceship from '../../components/Spaceship';
 import { default as Asteroid, IAsteroid } from '../../components/Asteroid';
 import Explosion from '../../components/Explosion'; // Import the Explosion component
+import Tracer from '../../components/Tracer'; 
 import { generateAsteroids, moveAsteroids, checkCollisions } from '../../utils/gameLogic';
 import beatmapS from '../../beatmaps/beatmap.json'; // Statically import the beatmap
 
@@ -21,6 +22,7 @@ export default function GameScreen() {
   const [shipRotation, setShipRotation] = useState(0);
   const [asteroids, setAsteroids] = useState<Array<IAsteroid>>([]);
   const [explosions, setExplosions] = useState<Array<{ x: number, y: number }>>([]); // Track active explosions
+  const [tracers, setTracers] = useState<Array<{}>>([]);
   const [centerX, setCenterX] = useState<number | null>(null);
   const [centerY, setCenterY] = useState<number | null>(null);
   const [collision, setCollision] = useState(false); // Track if a collision occurred
@@ -109,7 +111,7 @@ useEffect(() => {
   useEffect(() => {
     if (centerX !== null && centerY !== null) {
       const spawnInterval = setInterval(() => {
-        setAsteroids(prevAsteroids => generateAsteroids(prevAsteroids)); // Generate new asteroids at a specific interval
+        setAsteroids(prevAsteroids => generateAsteroids(prevAsteroids, centerX, centerY)); // Generate new asteroids at a specific interval
         console.log('Asteroid spawned');
       }, ASTEROID_SPAWN_INTERVAL);
       
@@ -118,7 +120,7 @@ useEffect(() => {
   }, [centerX, centerY]);
 
   const VICINITY_ANGLE = 30; // ±30 degrees around the hexagon side
-  const MAX_DISTANCE = 90; // The max distance where a collision with the hexagon side can occur (adjust this based on the size of the hexagon)
+  const MAX_DISTANCE = 120; // The max distance where a collision with the hexagon side can occur (adjust this based on the size of the hexagon)
 
   const handlePress = (event: any) => {
     if (centerX === null || centerY === null) return;
@@ -143,26 +145,42 @@ useEffect(() => {
 const checkAndHandleAsteroidCollisions = useCallback((rotation: number) => {
   setAsteroids(prevAsteroids => {
     let scoreDelta = 0; // Track how many asteroids were removed to update the score
+    let isUpdated = false;
     const updatedAsteroids = prevAsteroids.filter(asteroid => {
       const asteroidAngle = (asteroid.direction * (360 / HEXAGON_SIDES)) - 90;
       const isWithinVicinity = Math.abs((rotation - asteroidAngle + 360) % 360) <= VICINITY_ANGLE;
       const isWithinDistance = asteroid.distance <= MAX_DISTANCE;
 
       if (isWithinVicinity && isWithinDistance) {
+        isUpdated = true;
         scoreDelta += 1; // Increment score for each removed asteroid
 
         // Calculate asteroid position based on direction and distance
         const angle = asteroid.direction * Math.PI / 3;
         const asteroidX = centerX + Math.cos(angle) * asteroid.distance;
         const asteroidY = centerY + Math.sin(angle) * asteroid.distance;
+        const tipX = centerX + Math.cos(angle) * 20
+        const tipY = centerY + Math.sin(angle) * 20
 
         // Trigger an explosion at the asteroid's position
         setExplosions(prevExplosions => [...prevExplosions, { x: asteroidX, y: asteroidY }]);
+
+        setTracers(prevTracers => [...prevTracers, { x1: tipX, y1: tipY, x2: asteroidX, y2: asteroidY}])
 
         return false; // Remove this asteroid
       }
       return true; // Keep this asteroid
     });
+
+    if (!isUpdated) {
+      const direction = (rotation + 90) * HEXAGON_SIDES / 360
+      const angle = direction * Math.PI / 3;
+      const tipX = centerX + Math.cos(angle) * 20
+      const tipY = centerY + Math.sin(angle) * 20
+      const tailX = centerX + Math.cos(angle) * MAX_DISTANCE
+      const tailY = centerY + Math.sin(angle) * MAX_DISTANCE
+      setTracers(prevTracers => [...prevTracers, { x1: tipX, y1: tipY, x2: tailX, y2: tailY}])
+    }
 
     if (scoreDelta > 0) {
       setTimeout(() => {
@@ -203,6 +221,9 @@ const checkAndHandleAsteroidCollisions = useCallback((rotation: number) => {
             ))}
             {explosions.map((explosion, index) => (
               <Explosion key={index} x={explosion.x} y={explosion.y} />
+            ))}
+            {tracers.map((tracer, index) =>(
+              <Tracer key={index} x1={tracer.x1} y1={tracer.y1} x2={tracer.x2} y2={tracer.y2} />
             ))}
           </>
         )}
