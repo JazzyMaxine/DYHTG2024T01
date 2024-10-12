@@ -26,14 +26,14 @@ export const generateAsteroids = (currentAsteroids: Asteroid[]): Asteroid[] => {
     return [...currentAsteroids, newAsteroid];
 };
 
-export function moveAsteroids(asteroids) {
+export function moveAsteroids(asteroids: Asteroid[]) {
   return asteroids.map(asteroid => ({
     ...asteroid,
     distance: asteroid.distance - 5, // Move inward by 5 units per frame
   }));
 }
 
-export function checkCollisions(asteroids) {
+export function checkCollisions(asteroids: Asteroid[]) {
   const collided = asteroids.some(asteroid => asteroid.distance <= 10); // Check if any asteroid is too close to the center (spaceship)
   const remainingAsteroids = asteroids.filter(asteroid => asteroid.distance > 10); // Remove asteroids that reached the spaceship
   return { remainingAsteroids, collided };
