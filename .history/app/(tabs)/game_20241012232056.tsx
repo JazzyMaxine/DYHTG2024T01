@@ -23,9 +23,7 @@ export default function GameScreen() {
   const router = useRouter();
   const { score, updateScore, resetScore } = useGame();
   const [shipRotation, setShipRotation] = useState(0);
-  const [asteroids, setAsteroids] = useState<Array<IAsteroid>>([]);
-  const [explosions, setExplosions] = useState<Array<{ x: number, y: number }>>([]); // Track active explosions
-  const [asteroids, setAsteroids] = useState<Array<IAsteroid>>([]);
+  const [asteroids, setAsteroids] = useState<Array<{ id: string, direction: number, distance: number }>>([]);
   const [centerX, setCenterX] = useState<number | null>(null);
   const [centerY, setCenterY] = useState<number | null>(null);
   const [collision, setCollision] = useState(false); // Track if a collision occurred
@@ -190,7 +188,7 @@ useEffect(() => {
   useEffect(() => {
     if (centerX !== null && centerY !== null) {
       const spawnInterval = setInterval(() => {
-        setAsteroids(prevAsteroids => generateAsteroids(prevAsteroids, centerX, centerY, handleAsteroidPress)); // Generate new asteroids at a specific interval
+        setAsteroids(prevAsteroids => generateAsteroids(prevAsteroids)); // Generate new asteroids at a specific interval
         console.log('Asteroid spawned');
       }, ASTEROID_SPAWN_INTERVAL);
       
@@ -298,7 +296,6 @@ const handleLayout = useCallback((event: LayoutChangeEvent) => {
                 distance={asteroid.distance}
                 spaceshipX={centerX}
                 spaceshipY={centerY}
-                points={asteroid.points}
                 onPress={() => handleAsteroidPress(asteroid.id)}
               />
             ))}
