@@ -8,39 +8,15 @@ export default function HomeScreen() {
   const router = useRouter();
   const { highScore } = useGame();
 
-  // Function to handle beatmap selection and navigate to GameScreen
-  const selectBeatmap = (beatmapName) => {
-    router.push({
-      pathname: '/game',
-      params: { beatmapName: beatmapName }, // Pass the selected beatmap as a parameter
-    });
-  };
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Hexagon Rhythm</Text>
       <Text style={styles.highScore}>High Score: {highScore}</Text>
-
-      {/* Buttons for selecting different beatmaps */}
       <TouchableOpacity
         style={styles.button}
-        onPress={() => selectBeatmap('beatmap')}
+        onPress={() => router.push('/game')}
       >
-        <Text style={styles.buttonText}>Play Beatmap 1</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => selectBeatmap('beatmap')}
-      >
-        <Text style={styles.buttonText}>Play Beatmap 2</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => selectBeatmap('beatmap')}
-      >
-        <Text style={styles.buttonText}>Play Beatmap 3</Text>
+        <Text style={styles.buttonText}>Start Game</Text>
       </TouchableOpacity>
     </View>
   );
