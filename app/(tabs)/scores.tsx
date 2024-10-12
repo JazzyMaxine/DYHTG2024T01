@@ -38,12 +38,14 @@ const styles = StyleSheet.create({
     padding: 30,
   },
   title: {
+    fontFamily: 'AsteroidsDisplay',
     fontSize: 24,
     color: '#fff',
     marginBottom: 20,
   },
   score: {
-    fontSize: 36,
+    fontFamily: 'AsteroidsDisplay',
+    fontSize: 48,
     color: '#fff',
   },
 });

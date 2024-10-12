@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useGame } from '../../contexts/GameContext';
+import '../../styles/fonts.css';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -29,11 +30,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
   },
   title: {
+    fontFamily: 'AsteroidsDisplay',
     fontSize: 32,
     color: '#fff',
     marginBottom: 20,
   },
   highScore: {
+    fontFamily: 'AsteroidsDisplay',
     fontSize: 18,
     color: '#fff',
     marginBottom: 40,
@@ -45,6 +48,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   buttonText: {
+    fontFamily: 'AsteroidsDisplay',
     color: '#fff',
     fontSize: 18,
   },
