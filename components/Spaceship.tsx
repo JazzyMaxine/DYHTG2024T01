@@ -1,6 +1,6 @@
 import React from 'react';
-import Svg, { Polygon } from 'react-native-svg';
 import { View, StyleSheet } from 'react-native';
+import Svg, { Polygon } from 'react-native-svg';
 
 interface SpaceshipProps {
   rotation: number;
@@ -11,10 +11,10 @@ const Spaceship: React.FC<SpaceshipProps> = ({ rotation }) => {
     <View style={styles.container}>
       <Svg height="100%" width="100%" viewBox="0 0 100 100">
         <Polygon
-          points="50,40 55,50 50,60 45,50"
+          points="50,30 60,50 50,70 40,50" // Centered points
           fill="yellow"
-          origin="150, 50"
-          rotation={rotation}
+          origin="50,50" // Center point of the SVG canvas
+          rotation={rotation} // Rotate around the center
         />
       </Svg>
     </View>
@@ -23,11 +23,10 @@ const Spaceship: React.FC<SpaceshipProps> = ({ rotation }) => {
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    width: 100,
+    height: 100, // Set size for the spaceship
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
