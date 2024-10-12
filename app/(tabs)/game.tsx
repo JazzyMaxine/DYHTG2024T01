@@ -53,9 +53,42 @@ export default function GameScreen() {
 
   // Main game loop for moving and checking collisions
   useEffect(() => {
-    if (centerX !== null && centerY !== null) {
-      const intervalId = setInterval(gameLoop, 50);
-      return () => clearInterval(intervalId);
+    let intervalId: NodeJS.Timeout | undefined;
+    let timeoutId: NodeJS.Timeout | undefined;
+
+    if (isFocused) {
+      // Reset state when the screen gains focus
+      setAsteroids([]); // Clear asteroids
+      setExplosions([]); // Clear explosions
+      setCurrentIndex(0); // Reset the beatmap index
+      resetScore(); // Reset the score
+      setCollision(false); // Reset collision state
+
+      if (centerX !== null && centerY !== null && beatmapS && currentBeatmap) {
+        // Start the game loop when the screen is focused
+        intervalId = setInterval(gameLoop, 50); // Run game logic every 50ms
+
+        // Start asteroid spawning based on the beatmap
+        const spawnAsteroid = () => {
+          setAsteroids(prevAsteroids => generateAsteroids(prevAsteroids)); // Generate asteroids
+
+          // Move to the next beat subdivision in the beatmap
+          setCurrentIndex((prevIndex) => (prevIndex + 1) % currentBeatmap.length);
+          const nextSpawnTime = beatInterval * currentBeatmap[currentIndex]; // Adjust timing based on beatmap value
+
+          // Schedule the next asteroid spawn
+          timeoutId = setTimeout(spawnAsteroid, nextSpawnTime);
+        };
+
+        // Start spawning asteroids
+        const initialSpawnTime = beatInterval * currentBeatmap[currentIndex];
+        timeoutId = setTimeout(spawnAsteroid, initialSpawnTime);
+      }
+    } else {
+      // Screen is blurred, stop game logic and clear timers
+      if (intervalId) clearInterval(intervalId);
+      if (timeoutId) clearTimeout(timeoutId);
+
     }
   }, [centerX, centerY, gameLoop]);
 
