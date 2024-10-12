@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, TouchableWithoutFeedback, LayoutChangeEvent } from 'react-native';
 import { useIsFocused } from '@react-navigation/native'; // Import the useIsFocused hook
+import { View, StyleSheet, TouchableWithoutFeedback, LayoutChangeEvent, LayoutRectangle } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useRoute } from '@react-navigation/native';
 import { useGame } from '../../contexts/GameContext';
@@ -29,6 +29,8 @@ export default function GameScreen() {
   
   // Access beatmap items
   const currentBeatmap = beatmapS.beatmap;
+  let [layout, setLayout] = useState({ x: 0, y: 0, left: 0, top: 0, width: 0, height: 0 });
+
 
   // Move asteroids
   const moveAsteroidsInLoop = useCallback(() => {
@@ -112,10 +114,12 @@ export default function GameScreen() {
   const handlePress = (event: any) => {
     if (centerX === null || centerY === null) return;
 
-    const { pageX, pageY } = event.nativeEvent;
+    let { pageX, pageY } = event.nativeEvent;
+    pageX -= layout.left
+    pageY -= layout.top
     let angle = Math.atan2(pageY - centerY, pageX - centerX);
-    const direction = Math.round(angle / (2 * Math.PI / HEXAGON_SIDES) + HEXAGON_SIDES) % HEXAGON_SIDES;
-    const newRotation = (direction * (360 / HEXAGON_SIDES)) - 90;
+    const direction = Math.floor((angle - Math.PI / HEXAGON_SIDES) / (2 * Math.PI / HEXAGON_SIDES) - 1) % HEXAGON_SIDES;
+    const newRotation = (direction * (360 / HEXAGON_SIDES)) + 30;
 
     if (!isNaN(newRotation)) {
       setShipRotation(newRotation);
@@ -162,7 +166,8 @@ export default function GameScreen() {
   }, [updateScore, score, centerX, centerY]);
 
   const handleLayout = useCallback((event: LayoutChangeEvent) => {
-    const { width, height } = event.nativeEvent.layout;
+    const { x, y, left, top, width, height } = event.nativeEvent.layout;
+    setLayout({ x, y, left, top, width, height });
     setCenterX(width / 2);
     setCenterY(height / 2);
   }, []);
