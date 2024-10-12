@@ -2,24 +2,34 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useGame } from '../../contexts/GameContext';
 
-let highScoreList: number[] = [100, 200, 300, 400, 500]; //placeholder scores
+export type ScoreScreenProps = {
+  highScoreList: number[];
+};
 
-export default function ScoresScreen() {
-  const { highScore } = useGame();
+const ScoresScreen: React.FC<ScoreScreenProps> = ({highScoreList = [50,40,30,20,10]}) => {
+
+  
+
+  if (highScoreList.length > 5) {
+    highScoreList = highScoreList.slice(0, 5);
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.scoresContainer}>
-        <Text style={styles.title}>High Scores</Text>
+        <Text style={styles.title}>
+          High Scores
+        </Text>
         {highScoreList.map((score, index) => (
           <Text key={index} style={styles.score}>
             {score}
           </Text>
         ))}
-      </View>
+        </View>
     </View>
   );
-}
+};
+export default ScoresScreen;
 
 const styles = StyleSheet.create({
   container: {
