@@ -2,32 +2,22 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, TouchableWithoutFeedback, LayoutChangeEvent } from 'react-native';
 import { useIsFocused } from '@react-navigation/native'; // Import the useIsFocused hook
 import { useRouter } from 'expo-router';
+import { useRoute } from '@react-navigation/native';
 import { useGame } from '../../contexts/GameContext';
 import Hexagon from '../../components/Hexagon';
 import Spaceship from '../../components/Spaceship';
 import { default as Asteroid, IAsteroid } from '../../components/Asteroid';
 import Explosion from '../../components/Explosion'; // Import the Explosion component
 import { generateAsteroids, moveAsteroids, checkCollisions } from '../../utils/gameLogic';
+import beatmapS from '../../beatmaps/beatmap.json'; // Statically import the beatmap
 
 const HEXAGON_SIDES = 6;
-const BASE_BPM = 30; // Define the base BPM (e.g., 120 BPM for the song)
+const BASE_BPM = 120; // Define the base BPM (e.g., 120 BPM for the song)
 const beatInterval = (60 / BASE_BPM) * 1000; // Convert BPM to milliseconds
-const beatmap = [
-  1, 0.5, 1, 0.25, 0.5, 1, 2, 1, 0.5, 1,
-  0.5, 0.25, 2, 1, 0.5, 0.5, 1, 1, 0.5, 2,
-  1, 0.25, 0.5, 1, 2, 1, 0.5, 1, 0.25, 0.5,
-  1, 2, 1, 0.5, 0.5, 1, 1, 0.5, 0.25, 1,
-  1, 2, 0.5, 1, 0.25, 0.5, 1, 0.5, 1, 2,
-  1, 1, 0.5, 0.5, 1, 2, 1, 0.25, 0.5, 1,
-  1, 0.5, 0.5, 1, 2, 0.25, 1, 0.5, 1, 1,
-  0.5, 0.25, 2, 1, 0.5, 1, 0.5, 1, 2, 0.25,
-  1, 0.5, 0.5, 1, 1, 2, 1, 0.5, 1, 0.25,
-  0.5, 1, 2, 1, 0.5, 1, 1, 0.5, 2, 1
-];
 
 export default function GameScreen() {
   const router = useRouter();
-  const { score, updateScore, resetScore } = useGame(); // Assuming resetScore exists to reset the score
+  const { score, updateScore, resetScore } = useGame(); 
   const [shipRotation, setShipRotation] = useState(0);
   const [asteroids, setAsteroids] = useState<Array<IAsteroid>>([]);
   const [explosions, setExplosions] = useState<Array<{ x: number, y: number }>>([]); // Track active explosions
@@ -36,6 +26,9 @@ export default function GameScreen() {
   const [collision, setCollision] = useState(false); // Track if a collision occurred
   const [currentIndex, setCurrentIndex] = useState(0); // Track beatmap index
   const isFocused = useIsFocused(); // Use the hook to track if the screen is focused
+  
+  // Access beatmap items
+  const currentBeatmap = beatmapS.beatmap;
 
   // Move asteroids
   const moveAsteroidsInLoop = useCallback(() => {
@@ -79,25 +72,25 @@ export default function GameScreen() {
       resetScore(); // Reset the score
       setCollision(false); // Reset collision state
 
-      if (centerX !== null && centerY !== null) {
+      if (centerX !== null && centerY !== null && beatmapS && currentBeatmap) {
         // Start the game loop when the screen is focused
         intervalId = setInterval(gameLoop, 50); // Run game logic every 50ms
 
         // Start asteroid spawning based on the beatmap
         const spawnAsteroid = () => {
           setAsteroids(prevAsteroids => generateAsteroids(prevAsteroids)); // Generate asteroids
-          console.log('Asteroid spawned on beat subdivision:', beatmap[currentIndex]);
+          console.log('Asteroid spawned on beat subdivision:', currentBeatmap[currentIndex]);
 
           // Move to the next beat subdivision in the beatmap
-          setCurrentIndex((prevIndex) => (prevIndex + 1) % beatmap.length);
-          const nextSpawnTime = beatInterval * beatmap[currentIndex]; // Adjust timing based on beatmap value
+          setCurrentIndex((prevIndex) => (prevIndex + 1) % currentBeatmap.length);
+          const nextSpawnTime = beatInterval * currentBeatmap[currentIndex]; // Adjust timing based on beatmap value
 
           // Schedule the next asteroid spawn
           timeoutId = setTimeout(spawnAsteroid, nextSpawnTime);
         };
 
         // Start spawning asteroids
-        const initialSpawnTime = beatInterval * beatmap[currentIndex];
+        const initialSpawnTime = beatInterval * currentBeatmap[currentIndex];
         timeoutId = setTimeout(spawnAsteroid, initialSpawnTime);
       }
     } else {
@@ -111,7 +104,7 @@ export default function GameScreen() {
       if (intervalId) clearInterval(intervalId);
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [isFocused, centerX, centerY, gameLoop, beatInterval]);
+  }, [isFocused, centerX, centerY, gameLoop, beatInterval, currentBeatmap]);
 
   const VICINITY_ANGLE = 30; // ±30 degrees around the hexagon side
   const MAX_DISTANCE = 90; // The max distance where a collision with the hexagon side can occur (adjust based on hexagon size)
@@ -190,7 +183,6 @@ export default function GameScreen() {
                 spaceshipX={centerX}
                 spaceshipY={centerY}
                 points={asteroid.points}
-                onPress={() => {}}
               />
             ))}
             {explosions.map((explosion, index) => (
