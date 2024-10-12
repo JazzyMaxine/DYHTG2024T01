@@ -20,7 +20,7 @@ const Asteroid: React.FC<IAsteroid> = ({ direction, distance, spaceshipX, spaces
 
   return (
     <TouchableOpacity onPress={onPress} style={{ position: 'absolute', left: x - 10, top: y - 10 }}>
-      <Svg height="20" width="20" viewBox='-20,-20,40,40'>
+      <Svg height="40" width="40" viewBox='-20,-20,40,40'>
         <Polygon 
           points={points}
           fill="none"
