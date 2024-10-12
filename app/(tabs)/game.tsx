@@ -69,14 +69,16 @@ export default function GameScreen() {
   
           // Save the updated score list
           await saveScores(newScores);
-          router.push('/scores');
           resetScore();
+
+          router.push('/scores');
         } catch (error) {
           console.error('Error saving scores:', error);
         }
       };
   
       handleSave();
+      setCollision(false); // Reset collision state after handling it
     }
 }, [collision, score, router, resetScore]);
 
