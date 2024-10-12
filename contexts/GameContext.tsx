@@ -4,6 +4,7 @@ interface GameContextType {
   score: number;
   highScore: number;
   updateScore: (newScore: number) => void;
+  resetScore: () => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -26,9 +27,14 @@ export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
       setHighScore(newScore);
     }
   };
+  //
+  // Function to reset the score
+  const resetScore = () => {
+    setScore(0); // Reset score to zero
+  };
 
   return (
-    <GameContext.Provider value={{ score, highScore, updateScore }}>
+    <GameContext.Provider value={{ score, highScore, updateScore, resetScore }}>
       {children}
     </GameContext.Provider>
   );
