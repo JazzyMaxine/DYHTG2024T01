@@ -22,9 +22,8 @@ const ASTEROID_SPAWN_INTERVAL = 2000; // Spawn every 2 seconds (2000ms)
 
 export default function GameScreen() {
   const router = useRouter();
-  const { score, updateScore, resetScore } = useGame();
+  const {score, updateScore, resetScore } = useGame();
   const [shipRotation, setShipRotation] = useState(0);
-  const [asteroids, setAsteroids] = useState<Array<IAsteroid>>([]);
   const [explosions, setExplosions] = useState<Array<{ x: number, y: number }>>([]); // Track active explosions
   const [tracers, setTracers] = useState<Array<{}>>([]);
   const [centerX, setCenterX] = useState<number | null>(null);
@@ -352,5 +351,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
-  },
+  }
 });
