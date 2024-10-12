@@ -22,7 +22,8 @@ const Hexagon: React.FC<HexagonProps> = ({ shipRotation }) => {
 
   // TODO: FIX THE MATHS HERE THIS IS SO CURSED
   // Calculate the correct hexagon side the spaceship is pointing to
-  const sideIndex = (Math.floor((shipRotation % 360) / 60)+2) % 6;
+  const sideIndex = (Math.floor((shipRotation % 360) / 60)+8) % 6;
+  console.log(sideIndex)
 
   return (
     <View style={styles.container}>
