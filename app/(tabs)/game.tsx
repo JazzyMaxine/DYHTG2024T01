@@ -8,12 +8,9 @@ import Hexagon from '../../components/Hexagon';
 import Spaceship from '../../components/Spaceship';
 import { default as Asteroid, IAsteroid } from '../../components/Asteroid';
 import Explosion from '../../components/Explosion'; // Import the Explosion component
-import { default as Asteroid, IAsteroid } from '../../components/Asteroid';
 import { generateAsteroids, moveAsteroids, checkCollisions } from '../../utils/gameLogic';
 import { Audio } from 'expo-av'; // Import Audio module from expo-av
 import beatmapS from '../../beatmaps/beatmap.json'; // Statically import the beatmap
-import audioS from '../../audio/beatmap.mp3'
-import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
 import { getStoredScores, saveScores } from '../../utils/scoreStorage';
 
 const HEXAGON_SIDES = 6;
@@ -23,9 +20,8 @@ const ASTEROID_SPAWN_INTERVAL = 2000; // Spawn every 2 seconds (2000ms)
 
 export default function GameScreen() {
   const router = useRouter();
-  const { score, updateScore, resetScore } = useGame();
+  const {score, updateScore, resetScore } = useGame();
   const [shipRotation, setShipRotation] = useState(0);
-  const [asteroids, setAsteroids] = useState<Array<IAsteroid>>([]);
   const [explosions, setExplosions] = useState<Array<{ x: number, y: number }>>([]); // Track active explosions
   const [asteroids, setAsteroids] = useState<Array<IAsteroid>>([]);
   const [centerX, setCenterX] = useState<number | null>(null);
@@ -80,8 +76,9 @@ export default function GameScreen() {
   
       handleSave();
       setCollision(false); // Reset collision state after handling it
-    }
-    
+  }
+}, [collision, score, resetScore, router]);
+
 useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined;
     let timeoutId: NodeJS.Timeout | undefined;
@@ -260,5 +257,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
-  },
+  }
 });
