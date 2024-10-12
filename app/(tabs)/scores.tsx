@@ -39,7 +39,7 @@ const ScoresScreen: React.FC = () => {
             {score}
           </Text>
         ))}
-        </View>
+      </View>
     </View>
   );
 };
