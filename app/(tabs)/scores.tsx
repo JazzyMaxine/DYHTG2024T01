@@ -7,27 +7,25 @@ export type ScoreScreenProps = {
   highScoreList: number[];
 };
 
-const ScoresScreen: React.FC<ScoreScreenProps> = ({highScoreList = [50,40,30,20,10]}) => {
-    const [scores, setScores] = useState<number[]>(highScoreList);
+const ScoresScreen: React.FC = () => {
+    const [scores, setScores] = useState<number[]>([50,40,30,20,10]); // default scores
 
     useEffect(() => {
-        loadScores();
+      const loadScores = async () => {
+        try {
+          const storedScores = await getStoredScores();
+          if (storedScores.length > 0) {
+            setScores(storedScores);
+          }
+        } catch (error) {
+          console.error('Error loading scores:', error);
+        }
+      };
+  
+      loadScores();
     }, []);
 
-    // load scores 
-    const loadScores = async () => {
-        try {
-            const storedScores = await getStoredScores();
-            if (storedScores.length > 0) {
-                setScores(storedScores);
-            }
-        } catch (error) {
-            console.error('Error loading scores:', error);
 
-        }
-    };
-
-      
     const topScores = scores.slice(0, 5);
 
   return (
