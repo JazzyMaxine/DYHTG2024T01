@@ -12,32 +12,25 @@ interface Asteroid {
 
 export const generateAsteroids = (currentAsteroids: Asteroid[]): Asteroid[] => {
   if (currentAsteroids.length >= MAX_ASTEROIDS) return currentAsteroids;
-  
-  if (Math.random() < SPAWN_RATE) {
+
     const newAsteroid: Asteroid = {
       id: uuidv4(),
-      direction: Math.floor(Math.random() * 6),
-      distance: 0,
+      direction: Math.floor(Math.random() * 6), // Random direction
+      distance: 200, // Start far enough from the center (increase this if needed)
     };
+    console.log("New asteroid generated:", newAsteroid); // Logging here
     return [...currentAsteroids, newAsteroid];
-  }
-  return currentAsteroids;
 };
 
-export const moveAsteroids = (asteroids: Asteroid[]): Asteroid[] => {
-  return asteroids
-    .map(asteroid => ({
-      ...asteroid,
-      distance: asteroid.distance + ASTEROID_SPEED,
-    }))
-    .filter(asteroid => asteroid.distance < 100);
-};
+export function moveAsteroids(asteroids) {
+  return asteroids.map(asteroid => ({
+    ...asteroid,
+    distance: asteroid.distance - 5, // Move inward by 5 units per frame
+  }));
+}
 
-export const checkCollisions = (asteroids: Asteroid[]): { remainingAsteroids: Asteroid[], collided: boolean } => {
-  const collidedAsteroids = asteroids.filter(asteroid => asteroid.distance > 90);
-  
-  return {
-    remainingAsteroids: asteroids.filter(asteroid => asteroid.distance <= 90),
-    collided: collidedAsteroids.length > 0,
-  };
-};
+export function checkCollisions(asteroids) {
+  const collided = asteroids.some(asteroid => asteroid.distance <= 10); // Check if any asteroid is too close to the center (spaceship)
+  const remainingAsteroids = asteroids.filter(asteroid => asteroid.distance > 10); // Remove asteroids that reached the spaceship
+  return { remainingAsteroids, collided };
+}
