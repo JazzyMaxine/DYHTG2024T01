@@ -4,9 +4,10 @@ import { View, StyleSheet } from 'react-native';
 
 interface HexagonProps {
   shipRotation: number; // Pass the spaceship's rotation
+  shotsFired: number[]
 }
 
-const Hexagon: React.FC<HexagonProps> = ({ shipRotation }) => {
+const Hexagon: React.FC<HexagonProps> = ({ shipRotation, shotsFired }) => {
   // Hexagon points (calculated for a 100x100 viewbox)
   let hexagonPoints: any[] = [];
   const rot_step = 2*Math.PI / 6
