@@ -6,10 +6,14 @@ const ASTEROID_SPEED = 1;
 const SPAWN_RATE = 0.05;
 const MAX_ASTEROIDS = 10;
 
+const generateUniqueID = () => {
+  return Math.random().toString(36).substr(2, 9); // Generate a random string
+};
+
 export const generateAsteroids = (currentAsteroids: IAsteroid[], spaceshipX: number, spaceshipY: number, onPress: (id: string)=>void): IAsteroid[] => {
   if (currentAsteroids.length >= MAX_ASTEROIDS) return currentAsteroids;
 
-  let id =  uuidv4()
+  let id =  generateUniqueID()
     const newAsteroid: IAsteroid = {
       id:id,
       direction: Math.floor(Math.random() * 6), // Random direction
