@@ -10,11 +10,15 @@ interface Asteroid {
   distance: number;
 }
 
+const generateUniqueID = () => {
+  return Math.random().toString(36).substr(2, 9); // Generate a random string
+};
+
 export const generateAsteroids = (currentAsteroids: Asteroid[]): Asteroid[] => {
   if (currentAsteroids.length >= MAX_ASTEROIDS) return currentAsteroids;
 
     const newAsteroid: Asteroid = {
-      id: uuidv4(),
+      id: generateUniqueID(),
       direction: Math.floor(Math.random() * 6), // Random direction
       distance: 200, // Start far enough from the center (increase this if needed)
     };
