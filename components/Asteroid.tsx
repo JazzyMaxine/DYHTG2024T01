@@ -1,8 +1,5 @@
 import React from 'react';
 import Svg, { Polygon, Circle } from 'react-native-svg';
-import { TouchableOpacity } from 'react-native';
-import Svg, { Polygon } from 'react-native-svg';
-import { generatePolygon } from '../utils/asteroidGeneration';
 
 export interface IAsteroid {
   id: string;
