@@ -1,5 +1,5 @@
 import React from 'react';
-import Svg, { Polygon } from 'react-native-svg';
+import Svg, { Polygon, Circle } from 'react-native-svg';
 
 export interface IAsteroid {
   id: string;
@@ -24,6 +24,12 @@ const Asteroid: React.FC<IAsteroid> = ({ direction, distance, spaceshipX, spaces
         strokeWidth="1"
         origin="0,0"
         // rotation={rotation} // Rotate around the center
+      />
+      <Circle 
+        cx={0}
+        cy={0}
+        r={1}
+        fill="white"
       />
     </Svg>
   );
