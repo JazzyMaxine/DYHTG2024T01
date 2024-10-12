@@ -1,0 +1,10 @@
+@font-face {
+    font-family: 'AsteroidsDisplay';
+    src: url('./assets/fonts/asteroids-display/asteroids-display.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+    font-family: 'AsteroidsDisplay', sans-serif;
+}

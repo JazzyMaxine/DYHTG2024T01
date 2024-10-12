@@ -21,11 +21,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
   },
   title: {
+    fontFamily: 'AsteroidsDisplay',
     fontSize: 24,
     color: '#fff',
     marginBottom: 20,
   },
   score: {
+    fontFamily: 'AsteroidsDisplay',
     fontSize: 48,
     color: '#fff',
   },
