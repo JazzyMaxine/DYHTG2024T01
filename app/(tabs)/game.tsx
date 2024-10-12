@@ -4,33 +4,51 @@ import { useRouter } from 'expo-router';
 import { useGame } from '../../contexts/GameContext';
 import Hexagon from '../../components/Hexagon';
 import Spaceship from '../../components/Spaceship';
-import Asteroid from '../../components/Asteroid';
+import { default as Asteroid, IAsteroid } from '../../components/Asteroid';
 import { generateAsteroids, moveAsteroids, checkCollisions } from '../../utils/gameLogic';
 
 const HEXAGON_SIDES = 6;
+const ASTEROID_SPAWN_INTERVAL = 2000; // Spawn every 2 seconds (2000ms)
 
 export default function GameScreen() {
   const router = useRouter();
   const { score, updateScore } = useGame();
   const [shipRotation, setShipRotation] = useState(0);
-  const [asteroids, setAsteroids] = useState<Array<{ id: string, direction: number, distance: number }>>([]);
+  const [asteroids, setAsteroids] = useState<Array<IAsteroid>>([]);
   const [centerX, setCenterX] = useState<number | null>(null);
   const [centerY, setCenterY] = useState<number | null>(null);
+  const [collision, setCollision] = useState(false); // Track if a collision occurred
 
-  const gameLoop = useCallback(() => {
+  // Move asteroids
+  const moveAsteroidsInLoop = useCallback(() => {
+    setAsteroids(prevAsteroids => moveAsteroids(prevAsteroids));
+  }, []);
+
+  // Check collisions
+  const checkForCollisions = useCallback(() => {
     setAsteroids(prevAsteroids => {
-      const movedAsteroids = moveAsteroids(prevAsteroids);
-      const newAsteroids = generateAsteroids(movedAsteroids);
-      const { remainingAsteroids, collided } = checkCollisions(newAsteroids);
-      
+      const { remainingAsteroids, collided } = checkCollisions(prevAsteroids);
       if (collided) {
-        router.push('/scores');
+        setCollision(true); // Set collision flag to true if a collision occurred
       }
-      
       return remainingAsteroids;
     });
-  }, [router]);
+  }, []);
 
+  // Game loop for movement and collision detection
+  const gameLoop = useCallback(() => {
+    moveAsteroidsInLoop();    // Move asteroids
+    checkForCollisions();      // Check for collisions
+  }, [moveAsteroidsInLoop, checkForCollisions]);
+
+  // Effect to handle navigation on collision
+  useEffect(() => {
+    if (collision) {
+      router.push('/scores'); // Navigate to the scores screen
+    }
+  }, [collision, router]);
+
+  // Main game loop for moving and checking collisions
   useEffect(() => {
     if (centerX !== null && centerY !== null) {
       const intervalId = setInterval(gameLoop, 50);
@@ -38,39 +56,44 @@ export default function GameScreen() {
     }
   }, [centerX, centerY, gameLoop]);
 
-const handlePress = (event: any) => {
-  if (centerX === null || centerY === null) return;
+  // Asteroid spawning interval
+  useEffect(() => {
+    if (centerX !== null && centerY !== null) {
+      const spawnInterval = setInterval(() => {
+        setAsteroids(prevAsteroids => generateAsteroids(prevAsteroids, centerX, centerY, handleAsteroidPress)); // Generate new asteroids at a specific interval
+        console.log('Asteroid spawned');
+      }, ASTEROID_SPAWN_INTERVAL);
+      
+      return () => clearInterval(spawnInterval); // Clean up interval on unmount
+    }
+  }, [centerX, centerY]);
 
-  const { pageX, pageY } = event.nativeEvent;
-  console.log(event.nativeEvent.pageX,event.nativeEvent.pageY)
-  // Calculate the angle and ensure the result is valid
-  let angle = Math.atan2(pageY - centerY, pageX - centerX);
+  const handlePress = (event: any) => {
+    if (centerX === null || centerY === null) return;
 
-  // Ensure that `direction` is a valid number and handle edge cases
-  const direction = Math.round(angle / (2 * Math.PI / HEXAGON_SIDES) + HEXAGON_SIDES) % HEXAGON_SIDES;
+    const { pageX, pageY } = event.nativeEvent;
+    let angle = Math.atan2(pageY - centerY, pageX - centerX);
+    const direction = Math.round(angle / (2 * Math.PI / HEXAGON_SIDES) + HEXAGON_SIDES) % HEXAGON_SIDES;
+    const newRotation = (direction * (360 / HEXAGON_SIDES)) - 90;
 
-  // Calculate the ship's rotation safely, defaulting to 0 if there's any issue
-  const newRotation = (direction * (360 / HEXAGON_SIDES)) - 90;
-
-  // Ensure it's not NaN
-  if (!isNaN(newRotation)) {
-    setShipRotation(newRotation);
-  } else {
-    console.error('Invalid rotation value:', newRotation);
-    setShipRotation(0); // Fallback to 0 or any default value
-  }
-};
+    if (!isNaN(newRotation)) {
+      setShipRotation(newRotation);
+    } else {
+      console.error('Invalid rotation value:', newRotation);
+      setShipRotation(0);
+    }
+  };
 
   const handleAsteroidPress = useCallback((id: string) => {
     setAsteroids(prevAsteroids => {
       const asteroid = prevAsteroids.find(a => a.id === id);
-      if (asteroid && asteroid.distance > 80) {
-        updateScore(prevScore => prevScore + 1);
-        return prevAsteroids.filter(a => a.id !== id);
+      if (asteroid && asteroid.distance > 80) { // Assuming 80 is the minimum safe distance
+        updateScore(score + 1); // Increment the score
+        return prevAsteroids.filter(a => a.id !== id); // Remove the asteroid
       }
       return prevAsteroids;
     });
-  }, [updateScore]);
+  }, [updateScore, score]);
 
   const handleLayout = useCallback((event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
@@ -83,14 +106,17 @@ const handlePress = (event: any) => {
       <View style={styles.container} onLayout={handleLayout}>
         {centerX !== null && centerY !== null && (
           <>
-            <Hexagon />
+            <Hexagon shipRotation={shipRotation} />
             <Spaceship rotation={shipRotation} />
             {asteroids.map((asteroid) => (
               <Asteroid
                 key={asteroid.id}
-                {...asteroid}
+                id={asteroid.id}
+                direction={asteroid.direction}
+                distance={asteroid.distance}
                 spaceshipX={centerX}
                 spaceshipY={centerY}
+                points={asteroid.points}
                 onPress={() => handleAsteroidPress(asteroid.id)}
               />
             ))}

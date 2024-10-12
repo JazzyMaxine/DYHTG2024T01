@@ -9,11 +9,13 @@ interface SpaceshipProps {
 const Spaceship: React.FC<SpaceshipProps> = ({ rotation }) => {
   return (
     <View style={styles.container}>
-      <Svg height="100%" width="100%" viewBox="0 0 100 100">
+      <Svg height="100%" width="100%" viewBox="-12.5 -12.5 25 25"> 
         <Polygon
-          points="50,30 60,50 50,70 40,50" // Centered points
-          fill="yellow"
-          origin="50,50" // Center point of the SVG canvas
+          points="0,4 -3,-4 0,-3 3,-4" // Scaled-down points
+          fill="black"
+          stroke="white"
+          strokeWidth="1"
+          origin="0,0"
           rotation={rotation} // Rotate around the center
         />
       </Svg>
