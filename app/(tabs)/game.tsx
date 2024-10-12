@@ -13,6 +13,7 @@ import { generateAsteroids, moveAsteroids, checkCollisions } from '../../utils/g
 import { Audio } from 'expo-av'; // Import Audio module from expo-av
 import beatmapS from '../../beatmaps/beatmap.json'; // Statically import the beatmap
 import audioS from '../../audio/beatmap.mp3'
+import { getStoredScores, saveScores } from '../../utils/scoreStorage';
 
 const HEXAGON_SIDES = 6;
 const BASE_BPM = beatmapS.bpm; // Define the base BPM (e.g., 120 BPM for the song)
@@ -61,10 +62,17 @@ export default function GameScreen() {
   // Effect to handle navigation on collision
   useEffect(() => {
     if (collision) {
-      router.push('/scores'); // Navigate to the scores screen
-    }
-  }, [collision, router]);
+      const handleSave = async () => {
+        // Save the score to AsyncStorage
+        const storedScores = await getStoredScores();
+        const newScores = [...storedScores, score];
+        await saveScores(newScores);
 
+        router.push('/scores');
+      };
+      handleSave();
+    }
+  }, [collision, score, router]);
 
 useEffect(() => {
   let soundInstance: Audio.Sound | null = null;
