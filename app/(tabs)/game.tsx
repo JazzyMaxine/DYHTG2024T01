@@ -131,8 +131,6 @@ const checkAndHandleAsteroidCollisions = useCallback((rotation: number) => {
 
   const handleLayout = useCallback((event: LayoutChangeEvent) => {
     const { x, y, left, top, width, height } = event.nativeEvent.layout;
-    console.log(event)
-    console.log(x + ", " + y + ", " + width + ", " + height)
     setLayout({ x, y, left, top, width, height });
     setCenterX(width / 2);
     setCenterY(height / 2);
