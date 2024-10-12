@@ -63,16 +63,21 @@ export default function GameScreen() {
   useEffect(() => {
     if (collision) {
       const handleSave = async () => {
-        // Save the score to AsyncStorage
-        const storedScores = await getStoredScores();
-        const newScores = [...storedScores, score];
-        await saveScores(newScores);
+        try {
+          const storedScores = await getStoredScores();
+          const newScores = [...storedScores, score].sort((a, b) => b - a);
 
+          // Save the updated score list
+        await saveScores(newScores);
         router.push('/scores');
+          resetScore();
+        } catch (error) {
+          console.error('Error saving scores:', error);
+        }
       };
       handleSave();
     }
-  }, [collision, score, router]);
+}, [collision, score, router, resetScore]);
 
 useEffect(() => {
   let soundInstance: Audio.Sound | null = null;
