@@ -6,16 +6,21 @@ const ASTEROID_SPEED = 1;
 const SPAWN_RATE = 0.05;
 const MAX_ASTEROIDS = 10;
 
+interface Asteroid {
+  id: string;
+  direction: number;
+  distance: number;
+}
+
 const generateUniqueID = () => {
   return Math.random().toString(36).substr(2, 9); // Generate a random string
 };
 
-export const generateAsteroids = (currentAsteroids: IAsteroid[], spaceshipX: number, spaceshipY: number, onPress: (id: string)=>void): IAsteroid[] => {
+export const generateAsteroids = (currentAsteroids: Asteroid[]): Asteroid[] => {
   if (currentAsteroids.length >= MAX_ASTEROIDS) return currentAsteroids;
 
-  let id =  generateUniqueID()
-    const newAsteroid: IAsteroid = {
-      id:id,
+    const newAsteroid: Asteroid = {
+      id: generateUniqueID(),
       direction: Math.floor(Math.random() * 6), // Random direction
       distance: 200, // Start far enough from the center (increase this if needed)
       points: generatePolygon(10, 15, 7),
