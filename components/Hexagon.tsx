@@ -9,17 +9,17 @@ interface HexagonProps {
 const Hexagon: React.FC<HexagonProps> = ({ shipRotation }) => {
   // Hexagon points (calculated for a 100x100 viewbox)
   const hexagonPoints = [
-    { x1: 50, y1: 10, x2: 90, y2: 35 }, // Top-right
-    { x1: 90, y1: 35, x2: 90, y2: 65 }, // Right
-    { x1: 90, y1: 65, x2: 50, y2: 90 }, // Bottom-right
-    { x1: 50, y1: 90, x2: 10, y2: 65 }, // Bottom-left
-    { x1: 10, y1: 65, x2: 10, y2: 35 }, // Left
-    { x1: 10, y1: 35, x2: 50, y2: 10 }, // Top-left
+    { x1: 50, y1: 10, x2: 90, y2: 35 }, // Top-right (Side 0)
+    { x1: 90, y1: 35, x2: 90, y2: 65 }, // Right (Side 1)
+    { x1: 90, y1: 65, x2: 50, y2: 90 }, // Bottom-right (Side 2)
+    { x1: 50, y1: 90, x2: 10, y2: 65 }, // Bottom-left (Side 3)
+    { x1: 10, y1: 65, x2: 10, y2: 35 }, // Left (Side 4)
+    { x1: 10, y1: 35, x2: 50, y2: 10 }, // Top-left (Side 5)
   ];
 
-  // TODO: FIX THE MATHS HERE THIS IS SO CURSED
-  // Calculate the correct hexagon side the spaceship is pointing to
-  const sideIndex = (Math.floor((shipRotation + 360) % 360 / 60) + 3) % 6;
+  // Normalize rotation and calculate the hexagon side
+  const normalizedRotation = (shipRotation + 360) % 360; // Ensure the rotation is between 0 and 360
+  const sideIndex = Math.floor(normalizedRotation / 60) + 3 % 6; // Divide by 60 to get the corresponding side
 
   return (
     <View style={styles.container}>

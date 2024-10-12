@@ -5,6 +5,7 @@ import { useGame } from '../../contexts/GameContext';
 import Hexagon from '../../components/Hexagon';
 import Spaceship from '../../components/Spaceship';
 import { default as Asteroid, IAsteroid } from '../../components/Asteroid';
+import Explosion from '../../components/Explosion'; // Import the Explosion component
 import { generateAsteroids, moveAsteroids, checkCollisions } from '../../utils/gameLogic';
 
 const HEXAGON_SIDES = 6;
@@ -15,6 +16,7 @@ export default function GameScreen() {
   const { score, updateScore } = useGame();
   const [shipRotation, setShipRotation] = useState(0);
   const [asteroids, setAsteroids] = useState<Array<IAsteroid>>([]);
+  const [explosions, setExplosions] = useState<Array<{ x: number, y: number }>>([]); // Track active explosions
   const [centerX, setCenterX] = useState<number | null>(null);
   const [centerY, setCenterY] = useState<number | null>(null);
   const [collision, setCollision] = useState(false); // Track if a collision occurred
@@ -60,13 +62,16 @@ export default function GameScreen() {
   useEffect(() => {
     if (centerX !== null && centerY !== null) {
       const spawnInterval = setInterval(() => {
-        setAsteroids(prevAsteroids => generateAsteroids(prevAsteroids, centerX, centerY, handleAsteroidPress)); // Generate new asteroids at a specific interval
+        setAsteroids(prevAsteroids => generateAsteroids(prevAsteroids)); // Generate new asteroids at a specific interval
         console.log('Asteroid spawned');
       }, ASTEROID_SPAWN_INTERVAL);
       
       return () => clearInterval(spawnInterval); // Clean up interval on unmount
     }
   }, [centerX, centerY]);
+
+  const VICINITY_ANGLE = 30; // ±30 degrees around the hexagon side
+  const MAX_DISTANCE = 90; // The max distance where a collision with the hexagon side can occur (adjust this based on the size of the hexagon)
 
   const handlePress = (event: any) => {
     if (centerX === null || centerY === null) return;
@@ -78,22 +83,48 @@ export default function GameScreen() {
 
     if (!isNaN(newRotation)) {
       setShipRotation(newRotation);
+      // Update asteroids after the spaceship moves
+      checkAndHandleAsteroidCollisions(newRotation);
     } else {
       console.error('Invalid rotation value:', newRotation);
       setShipRotation(0);
     }
   };
 
-  const handleAsteroidPress = useCallback((id: string) => {
-    setAsteroids(prevAsteroids => {
-      const asteroid = prevAsteroids.find(a => a.id === id);
-      if (asteroid && asteroid.distance > 80) { // Assuming 80 is the minimum safe distance
-        updateScore(score + 1); // Increment the score
-        return prevAsteroids.filter(a => a.id !== id); // Remove the asteroid
+const checkAndHandleAsteroidCollisions = useCallback((rotation: number) => {
+  setAsteroids(prevAsteroids => {
+    let scoreDelta = 0; // Track how many asteroids were removed to update the score
+    const updatedAsteroids = prevAsteroids.filter(asteroid => {
+      const asteroidAngle = (asteroid.direction * (360 / HEXAGON_SIDES)) - 90;
+      const isWithinVicinity = Math.abs((rotation - asteroidAngle + 360) % 360) <= VICINITY_ANGLE;
+      const isWithinDistance = asteroid.distance <= MAX_DISTANCE;
+
+      if (isWithinVicinity && isWithinDistance) {
+        scoreDelta += 1; // Increment score for each removed asteroid
+
+        // Calculate asteroid position based on direction and distance
+        const angle = asteroid.direction * Math.PI / 3;
+        const asteroidX = centerX + Math.cos(angle) * asteroid.distance;
+        const asteroidY = centerY + Math.sin(angle) * asteroid.distance;
+
+        // Trigger an explosion at the asteroid's position
+        setExplosions(prevExplosions => [...prevExplosions, { x: asteroidX, y: asteroidY }]);
+
+        return false; // Remove this asteroid
       }
-      return prevAsteroids;
+      return true; // Keep this asteroid
     });
-  }, [updateScore, score]);
+
+    if (scoreDelta > 0) {
+      setTimeout(() => {
+        updateScore(score + scoreDelta); // Update score after the render phase
+      }, 0);
+    }
+
+    return updatedAsteroids;
+  });
+}, [updateScore, score, centerX, centerY]);
+
 
   const handleLayout = useCallback((event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
@@ -117,8 +148,11 @@ export default function GameScreen() {
                 spaceshipX={centerX}
                 spaceshipY={centerY}
                 points={asteroid.points}
-                onPress={() => handleAsteroidPress(asteroid.id)}
+                onPress={() => {}}
               />
+            ))}
+            {explosions.map((explosion, index) => (
+              <Explosion key={index} x={explosion.x} y={explosion.y} />
             ))}
           </>
         )}
