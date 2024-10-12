@@ -1,18 +1,34 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useGame } from '../../contexts/GameContext';
+import { getStoredScores, saveScores } from '../../utils/scoreStorage';
 
 export type ScoreScreenProps = {
   highScoreList: number[];
 };
 
 const ScoresScreen: React.FC<ScoreScreenProps> = ({highScoreList = [50,40,30,20,10]}) => {
+    const [scores, setScores] = useState<number[]>(highScoreList);
 
-  
+    useEffect(() => {
+        loadScores();
+    }, []);
 
-  if (highScoreList.length > 5) {
-    highScoreList = highScoreList.slice(0, 5);
-  }
+    // load scores 
+    const loadScores = async () => {
+        try {
+            const storedScores = await getStoredScores();
+            if (storedScores.length > 0) {
+                setScores(storedScores);
+            }
+        } catch (error) {
+            console.error('Error loading scores:', error);
+
+        }
+    };
+
+      
+    const topScores = scores.slice(0, 5);
 
   return (
     <View style={styles.container}>
@@ -20,7 +36,7 @@ const ScoresScreen: React.FC<ScoreScreenProps> = ({highScoreList = [50,40,30,20,
         <Text style={styles.title}>
           High Scores
         </Text>
-        {highScoreList.map((score, index) => (
+        {topScores.map((score, index) => (
           <Text key={index} style={styles.score}>
             {score}
           </Text>

@@ -6,6 +6,8 @@ import Hexagon from '../../components/Hexagon';
 import Spaceship from '../../components/Spaceship';
 import { default as Asteroid, IAsteroid } from '../../components/Asteroid';
 import { generateAsteroids, moveAsteroids, checkCollisions } from '../../utils/gameLogic';
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+import { getStoredScores, saveScores } from '../../utils/scoreStorage';
 
 const HEXAGON_SIDES = 6;
 const ASTEROID_SPAWN_INTERVAL = 2000; // Spawn every 2 seconds (2000ms)
@@ -44,10 +46,19 @@ export default function GameScreen() {
   // Effect to handle navigation on collision
   useEffect(() => {
     if (collision) {
-      router.push('/scores'); // Navigate to the scores screen
-    }
-  }, [collision, router]);
+      const handleSave = async () => {
+        // Save the score to AsyncStorage
 
+        const storedScores = await getStoredScores();
+        const newScores = [...storedScores, score];
+        await saveScores(newScores);
+
+        router.push('/scores');
+      };
+      handleSave();
+    }
+  }, [collision, score, router]);
+  
   // Main game loop for moving and checking collisions
   useEffect(() => {
     if (centerX !== null && centerY !== null) {
