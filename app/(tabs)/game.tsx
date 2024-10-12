@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Platform } from 'react-native'
 import { useIsFocused } from '@react-navigation/native'; // Import the useIsFocused hook
 import { View, StyleSheet, TouchableWithoutFeedback, LayoutChangeEvent, LayoutRectangle } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -7,8 +8,11 @@ import Hexagon from '../../components/Hexagon';
 import Spaceship from '../../components/Spaceship';
 import { default as Asteroid, IAsteroid } from '../../components/Asteroid';
 import Explosion from '../../components/Explosion'; // Import the Explosion component
+import { default as Asteroid, IAsteroid } from '../../components/Asteroid';
 import { generateAsteroids, moveAsteroids, checkCollisions } from '../../utils/gameLogic';
+import { Audio } from 'expo-av'; // Import Audio module from expo-av
 import beatmapS from '../../beatmaps/beatmap.json'; // Statically import the beatmap
+import audioS from '../../audio/beatmap.mp3'
 import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
 import { getStoredScores, saveScores } from '../../utils/scoreStorage';
 
@@ -23,11 +27,13 @@ export default function GameScreen() {
   const [shipRotation, setShipRotation] = useState(0);
   const [asteroids, setAsteroids] = useState<Array<IAsteroid>>([]);
   const [explosions, setExplosions] = useState<Array<{ x: number, y: number }>>([]); // Track active explosions
+  const [asteroids, setAsteroids] = useState<Array<IAsteroid>>([]);
   const [centerX, setCenterX] = useState<number | null>(null);
   const [centerY, setCenterY] = useState<number | null>(null);
   const [collision, setCollision] = useState(false); // Track if a collision occurred
   let [layout, setLayout] = useState({ x: 0, y: 0, left: 0, top: 0, width: 0, height: 0 });
   const [currentIndex, setCurrentIndex] = useState(0); // Track beatmap index
+  const [sound, setSound] = useState<Audio.Sound | null>(null); // State for the sound object
   const isFocused = useIsFocused(); // Use the hook to track if the screen is focused
   
   // Access beatmap items
@@ -75,13 +81,13 @@ export default function GameScreen() {
       handleSave();
       setCollision(false); // Reset collision state after handling it
     }
-  }, [collision, score, router, resetScore]);
-  
+    
 useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined;
     let timeoutId: NodeJS.Timeout | undefined;
 
     if (isFocused) {
+
       // Reset state when the screen gains focus
       setAsteroids([]); // Clear asteroids
       setExplosions([]); // Clear explosions
@@ -96,7 +102,6 @@ useEffect(() => {
         // Start asteroid spawning based on the beatmap
         const spawnAsteroid = () => {
           setAsteroids(prevAsteroids => generateAsteroids(prevAsteroids)); // Generate asteroids
-          console.log('Asteroid spawned on beat subdivision:', currentBeatmap[currentIndex]);
 
           // Move to the next beat subdivision in the beatmap
           setCurrentIndex((prevIndex) => (prevIndex + 1) % currentBeatmap.length);
@@ -127,7 +132,7 @@ useEffect(() => {
   useEffect(() => {
     if (centerX !== null && centerY !== null) {
       const spawnInterval = setInterval(() => {
-        setAsteroids(prevAsteroids => generateAsteroids(prevAsteroids)); // Generate new asteroids at a specific interval
+        setAsteroids(prevAsteroids => generateAsteroids(prevAsteroids, centerX, centerY, handleAsteroidPress)); // Generate new asteroids at a specific interval
         console.log('Asteroid spawned');
       }, ASTEROID_SPAWN_INTERVAL);
       
@@ -139,12 +144,23 @@ useEffect(() => {
   const MAX_DISTANCE = 90; // The max distance where a collision with the hexagon side can occur (adjust this based on the size of the hexagon)
 
   const handlePress = (event: any) => {
-    if (centerX === null || centerY === null) return;
+  if (centerX === null || centerY === null) return;
 
-    let { pageX, pageY } = event.nativeEvent;
-    pageX -= layout.left
-    pageY -= layout.top
-    let angle = Math.atan2(pageY - centerY, pageX - centerX);
+  let { pageX, pageY } = event.nativeEvent;
+  // Log touch event coordinates to debug
+
+  // Adjust for the layout offset
+// Use Platform.OS to check if running on mobile or web
+    pageX -= layout.left;
+    pageY -= layout.top;
+  // Log adjusted coordinates
+  console.log('Adjusted touch coordinates:', pageX, pageY);
+
+  // Calculate the angle of the touch event relative to the center
+  let angle = Math.atan2(pageY - centerY, pageX - centerX);
+
+  // Make sure the angle calculation is valid (log to debug)
+  console.log('Calculated angle:', angle);
     const direction = Math.floor((angle - Math.PI / HEXAGON_SIDES) / (2 * Math.PI / HEXAGON_SIDES) - 1) % HEXAGON_SIDES;
     const newRotation = (direction * (360 / HEXAGON_SIDES)) + 30;
 
@@ -193,12 +209,21 @@ const checkAndHandleAsteroidCollisions = useCallback((rotation: number) => {
 }, [updateScore, score, centerX, centerY]);
 
 
-  const handleLayout = useCallback((event: LayoutChangeEvent) => {
-    const { x, y, left, top, width, height } = event.nativeEvent.layout;
-    setLayout({ x, y, left, top, width, height });
-    setCenterX(width / 2);
-    setCenterY(height / 2);
-  }, []);
+const handleLayout = useCallback((event: LayoutChangeEvent) => {
+  const { x, y, width, height } = event.nativeEvent.layout;
+
+  // On mobile, `left` and `top` are usually undefined, so use `x` and `y` instead
+  const left = Platform.OS === 'web' ? event.nativeEvent.layout.left : x;
+  const top = Platform.OS === 'web' ? event.nativeEvent.layout.top : y;
+
+  // Log to verify the layout values
+  console.log('Layout:', { left, top, width, height });
+
+  // Update layout state and calculate center coordinates
+  setLayout({ x, y, left, top, width, height });
+  setCenterX(width / 2);
+  setCenterY(height / 2);
+}, []);
 
   return (
     <TouchableWithoutFeedback onPress={handlePress}>
@@ -216,7 +241,7 @@ const checkAndHandleAsteroidCollisions = useCallback((rotation: number) => {
                 spaceshipX={centerX}
                 spaceshipY={centerY}
                 points={asteroid.points}
-                onPress={() => {}}
+                onPress={() => handleAsteroidPress(asteroid.id)}
               />
             ))}
             {explosions.map((explosion, index) => (
