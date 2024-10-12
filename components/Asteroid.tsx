@@ -1,7 +1,5 @@
 import React from 'react';
-import { TouchableOpacity } from 'react-native';
 import Svg, { Polygon } from 'react-native-svg';
-import { generatePolygon } from '../utils/asteroidGeneration';
 
 export interface IAsteroid {
   id: string;
@@ -10,27 +8,24 @@ export interface IAsteroid {
   spaceshipX: number;
   spaceshipY: number;
   points: string;
-  onPress: () => void;
 }
 
-const Asteroid: React.FC<IAsteroid> = ({ direction, distance, spaceshipX, spaceshipY, points, onPress }) => {
+const Asteroid: React.FC<IAsteroid> = ({ direction, distance, spaceshipX, spaceshipY, points }) => {
   const angle = direction * Math.PI / 3;
   const x = spaceshipX + Math.cos(angle) * distance;
   const y = spaceshipY + Math.sin(angle) * distance;
 
   return (
-    <TouchableOpacity onPress={onPress} style={{ position: 'absolute', left: x - 10, top: y - 10 }}>
-      <Svg height="40" width="40" viewBox='-20,-20,40,40'>
-        <Polygon 
-          points={points}
-          fill="none"
-          stroke="white"
-          strokeWidth="1"
-          origin="0,0"
-          // rotation={rotation} // Rotate around the center
-        />
-      </Svg>
-    </TouchableOpacity>
+    <Svg style={{ position: 'absolute', left: x - 10, top: y - 10 }} height="40" width="40" viewBox='-20,-20,40,40'>
+      <Polygon 
+        points={points}
+        fill="none"
+        stroke="white"
+        strokeWidth="1"
+        origin="0,0"
+        // rotation={rotation} // Rotate around the center
+      />
+    </Svg>
   );
 };
 
