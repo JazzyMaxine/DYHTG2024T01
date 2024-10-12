@@ -1,6 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import { IAsteroid } from '../components/Asteroid';
 import { generatePolygon } from './asteroidGeneration';
+import { IAsteroid } from '../components/Asteroid';
+import { generatePolygon } from './asteroidGeneration';
 
 const ASTEROID_SPEED = 1;
 const SPAWN_RATE = 0.05;
@@ -38,7 +40,18 @@ export function moveAsteroids(asteroids: IAsteroid[]) {
     distance: asteroid.distance - 5, // Move inward by 5 units per frame
   }));
 }
+export function moveAsteroids(asteroids: IAsteroid[]) {
+  return asteroids.map(asteroid => ({
+    ...asteroid,
+    distance: asteroid.distance - 5, // Move inward by 5 units per frame
+  }));
+}
 
+export function checkCollisions(asteroids: IAsteroid[]) {
+  const collided = asteroids.some(asteroid => asteroid.distance <= 10); // Check if any asteroid is too close to the center (spaceship)
+  const remainingAsteroids = asteroids.filter(asteroid => asteroid.distance > 10); // Remove asteroids that reached the spaceship
+  return { remainingAsteroids, collided };
+}
 export function checkCollisions(asteroids: IAsteroid[]) {
   const collided = asteroids.some(asteroid => asteroid.distance <= 10); // Check if any asteroid is too close to the center (spaceship)
   const remainingAsteroids = asteroids.filter(asteroid => asteroid.distance > 10); // Remove asteroids that reached the spaceship
