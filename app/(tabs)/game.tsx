@@ -71,6 +71,7 @@ export default function GameScreen() {
         // Start asteroid spawning based on the beatmap
         const spawnAsteroid = () => {
           setAsteroids(prevAsteroids => generateAsteroids(prevAsteroids)); // Generate asteroids
+          console.log('Asteroid spawned on beat subdivision:', currentBeatmap[currentIndex]);
 
           // Move to the next beat subdivision in the beatmap
           setCurrentIndex((prevIndex) => (prevIndex + 1) % currentBeatmap.length);
