@@ -13,6 +13,8 @@ import { generateAsteroids, moveAsteroids, checkCollisions } from '../../utils/g
 import { Audio } from 'expo-av'; // Import Audio module from expo-av
 import beatmapS from '../../beatmaps/beatmap.json'; // Statically import the beatmap
 import audioS from '../../audio/beatmap.mp3'
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+import { getStoredScores, saveScores } from '../../utils/scoreStorage';
 
 const HEXAGON_SIDES = 6;
 const BASE_BPM = beatmapS.bpm; // Define the base BPM (e.g., 120 BPM for the song)
@@ -61,85 +63,25 @@ export default function GameScreen() {
   // Effect to handle navigation on collision
   useEffect(() => {
     if (collision) {
-      router.push('/scores'); // Navigate to the scores screen
-    }
-  }, [collision, router]);
+      const handleSave = async () => {
+        try {
+          const storedScores = await getStoredScores();
+          const newScores = [...storedScores, score].sort((a, b) => b - a);
+  
+          // Save the updated score list
+          await saveScores(newScores);
+          resetScore();
 
-
-useEffect(() => {
-  let soundInstance: Audio.Sound | null = null;
-  let isPlaying = false; // Flag to track if the sound is already playing
-
-  const loadAndPlaySound = async () => {
-    try {
-      if (!soundInstance) {
-        const { sound } = await Audio.Sound.createAsync(audioS);
-        soundInstance = sound;
-        setSound(sound);
-
-        // Set playback status update to track progress
-        sound.setOnPlaybackStatusUpdate((status) => {
-          if (status.isLoaded) {
-            if (status.didJustFinish) {
-              console.log('Sound finished playing.');
-              isPlaying = false;
-            } else if (status.isPlaying && !isPlaying) {
-              console.log('Sound started playing.');
-              isPlaying = true;
-            } else if (!status.isPlaying && isPlaying) {
-              console.log('Sound paused or stopped.');
-              isPlaying = false;
-            }
-          } else if (status.error) {
-            // Handle the case where the sound failed to load or encountered an error
-            console.error(`Sound error: ${status.error}`);
-          }
-        });
-
-        // Play audio only when it's loaded
-        const status = await sound.getStatusAsync();
-        if (status.isLoaded && !isPlaying) {
-          await sound.playAsync();
-          isPlaying = true;
+          router.push('/scores');
+        } catch (error) {
+          console.error('Error saving scores:', error);
         }
-      }
-    } catch (error) {
-      console.error('Failed to play audio', error);
+      };
+  
+      handleSave();
+      setCollision(false); // Reset collision state after handling it
     }
-  };
-
-  const stopSound = async () => {
-    if (soundInstance) {
-      try {
-        const status = await soundInstance.getStatusAsync();
-
-        if (status.isLoaded && isPlaying) {
-          if (status.isPlaying) {
-            await soundInstance.stopAsync();
-          }
-          await soundInstance.unloadAsync(); // Unload only if it's loaded
-          isPlaying = false;
-        }
-      } catch (error) {
-        console.error('Error during sound cleanup:', error);
-      }
-    }
-  };
-
-  if (isFocused) {
-    // Load and play audio when the screen is focused
-    loadAndPlaySound();
-  } else {
-    // Stop and unload the sound when the screen is blurred
-    stopSound();
-  }
-
-  // Cleanup function to unload sound on component unmount
-  return () => {
-    stopSound();
-  };
-}, [isFocused]); // Depend only on `isFocused` to ensure proper loading/unloading
-
+    
 useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined;
     let timeoutId: NodeJS.Timeout | undefined;
