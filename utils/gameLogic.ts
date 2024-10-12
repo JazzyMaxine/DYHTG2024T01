@@ -23,7 +23,6 @@ export const generateAsteroids = (currentAsteroids: IAsteroid[], spaceshipX: num
       spaceshipY,
       onPress: ()=>onPress(id),
     };
-    console.log("New asteroid generated:", newAsteroid); // Logging here
     return [...currentAsteroids, newAsteroid];
 };
 
