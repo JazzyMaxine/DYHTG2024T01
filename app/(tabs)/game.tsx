@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, TouchableWithoutFeedback, LayoutChangeEvent } from 'react-native';
+import { View, StyleSheet, TouchableWithoutFeedback, LayoutChangeEvent, LayoutRectangle } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useGame } from '../../contexts/GameContext';
 import Hexagon from '../../components/Hexagon';
@@ -20,6 +20,7 @@ export default function GameScreen() {
   const [centerX, setCenterX] = useState<number | null>(null);
   const [centerY, setCenterY] = useState<number | null>(null);
   const [collision, setCollision] = useState(false); // Track if a collision occurred
+  let [layout, setLayout] = useState({ x: 0, y: 0, left: 0, top: 0, width: 0, height: 0 });
 
   // Move asteroids
   const moveAsteroidsInLoop = useCallback(() => {
@@ -76,10 +77,12 @@ export default function GameScreen() {
   const handlePress = (event: any) => {
     if (centerX === null || centerY === null) return;
 
-    const { pageX, pageY } = event.nativeEvent;
+    let { pageX, pageY } = event.nativeEvent;
+    pageX -= layout.left
+    pageY -= layout.top
     let angle = Math.atan2(pageY - centerY, pageX - centerX);
-    const direction = Math.round(angle / (2 * Math.PI / HEXAGON_SIDES) + HEXAGON_SIDES) % HEXAGON_SIDES;
-    const newRotation = (direction * (360 / HEXAGON_SIDES)) - 90;
+    const direction = Math.floor((angle - Math.PI / HEXAGON_SIDES) / (2 * Math.PI / HEXAGON_SIDES) - 1) % HEXAGON_SIDES;
+    const newRotation = (direction * (360 / HEXAGON_SIDES)) + 30;
 
     if (!isNaN(newRotation)) {
       setShipRotation(newRotation);
@@ -127,7 +130,10 @@ const checkAndHandleAsteroidCollisions = useCallback((rotation: number) => {
 
 
   const handleLayout = useCallback((event: LayoutChangeEvent) => {
-    const { width, height } = event.nativeEvent.layout;
+    const { x, y, left, top, width, height } = event.nativeEvent.layout;
+    console.log(event)
+    console.log(x + ", " + y + ", " + width + ", " + height)
+    setLayout({ x, y, left, top, width, height });
     setCenterX(width / 2);
     setCenterY(height / 2);
   }, []);
