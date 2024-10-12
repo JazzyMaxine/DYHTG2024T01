@@ -4,18 +4,17 @@ import { Platform } from 'react-native';
 const SCORE_KEY = 'gameScores';
 const isWeb = Platform.OS === 'web';
 
-// function saving scores to AsyncStorage
+// function saving scores depending on the platform
 export const saveScores = async (scores: number[]) => {
-
     const jsonScores = JSON.stringify(scores);
     if (isWeb) {
         localStorage.setItem(SCORE_KEY, jsonScores);
-    }   else {
-          await AsyncStorage.setItem(SCORE_KEY, jsonScores);
+    } else {
+        await AsyncStorage.setItem(SCORE_KEY, jsonScores);
     }
 };
 
-// function to get scores from AsyncStorage
+// function to get scores depending on the platform
 export const getStoredScores = async (): Promise<number[]> => {
 
   if (isWeb) {
