@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useGame } from '../../contexts/GameContext';
 import Hexagon from '../../components/Hexagon';
 import Spaceship from '../../components/Spaceship';
-import Asteroid from '../../components/Asteroid';
+import { default as Asteroid, IAsteroid } from '../../components/Asteroid';
 import { generateAsteroids, moveAsteroids, checkCollisions } from '../../utils/gameLogic';
 
 const HEXAGON_SIDES = 6;
@@ -14,7 +14,7 @@ export default function GameScreen() {
   const router = useRouter();
   const { score, updateScore } = useGame();
   const [shipRotation, setShipRotation] = useState(0);
-  const [asteroids, setAsteroids] = useState<Array<{ id: string, direction: number, distance: number }>>([]);
+  const [asteroids, setAsteroids] = useState<Array<IAsteroid>>([]);
   const [centerX, setCenterX] = useState<number | null>(null);
   const [centerY, setCenterY] = useState<number | null>(null);
   const [collision, setCollision] = useState(false); // Track if a collision occurred
@@ -60,7 +60,7 @@ export default function GameScreen() {
   useEffect(() => {
     if (centerX !== null && centerY !== null) {
       const spawnInterval = setInterval(() => {
-        setAsteroids(prevAsteroids => generateAsteroids(prevAsteroids)); // Generate new asteroids at a specific interval
+        setAsteroids(prevAsteroids => generateAsteroids(prevAsteroids, centerX, centerY, handleAsteroidPress)); // Generate new asteroids at a specific interval
         console.log('Asteroid spawned');
       }, ASTEROID_SPAWN_INTERVAL);
       
@@ -116,6 +116,7 @@ export default function GameScreen() {
                 distance={asteroid.distance}
                 spaceshipX={centerX}
                 spaceshipY={centerY}
+                points={asteroid.points}
                 onPress={() => handleAsteroidPress(asteroid.id)}
               />
             ))}

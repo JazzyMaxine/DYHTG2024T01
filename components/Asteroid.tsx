@@ -1,25 +1,34 @@
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
+import Svg, { Polygon } from 'react-native-svg';
+import { generatePolygon } from '../utils/asteroidGeneration';
 
-interface AsteroidProps {
+export interface IAsteroid {
   id: string;
   direction: number;
   distance: number;
   spaceshipX: number;
   spaceshipY: number;
+  points: string;
   onPress: () => void;
 }
 
-const Asteroid: React.FC<AsteroidProps> = ({ direction, distance, spaceshipX, spaceshipY, onPress }) => {
+const Asteroid: React.FC<IAsteroid> = ({ direction, distance, spaceshipX, spaceshipY, points, onPress }) => {
   const angle = direction * Math.PI / 3;
   const x = spaceshipX + Math.cos(angle) * distance;
   const y = spaceshipY + Math.sin(angle) * distance;
 
   return (
     <TouchableOpacity onPress={onPress} style={{ position: 'absolute', left: x - 10, top: y - 10 }}>
-      <Svg height="20" width="20">
-        <Circle cx="10" cy="10" r="5" fill="white" />
+      <Svg height="20" width="20" viewBox='-20,-20,40,40'>
+        <Polygon 
+          points={points}
+          fill="none"
+          stroke="white"
+          strokeWidth="1"
+          origin="0,0"
+          // rotation={rotation} // Rotate around the center
+        />
       </Svg>
     </TouchableOpacity>
   );
