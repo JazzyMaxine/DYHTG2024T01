@@ -1,6 +1,7 @@
-node_modules/
-.expo/
-dist/
+
+frontend/node_modules/
+frontend/.expo/
+frontend/dist/
 npm-debug.*
 *.jks
 *.p8
@@ -10,6 +11,11 @@ npm-debug.*
 *.orig.*
 web-build/
 .vscode
+
+backend/cache/
+backend/temp_files/
+
+
 
 # macOS
 .DS_Store
