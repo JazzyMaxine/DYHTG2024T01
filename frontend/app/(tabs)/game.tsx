@@ -62,6 +62,7 @@ export default function GameScreen() {
   // Effect to handle navigation on collision
   useEffect(() => {
     if (collision) {
+      playDeath()
       const handleSave = async () => {
         try {
           const storedScores = await getStoredScores();
