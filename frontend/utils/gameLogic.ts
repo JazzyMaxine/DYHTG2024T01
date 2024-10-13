@@ -22,6 +22,7 @@ export const generateAsteroids = (currentAsteroids: IAsteroid[], spaceshipX: num
       spaceshipX,
       spaceshipY,
       onPress: ()=>onPress(id),
+      createdAt: Date.now() // Add createdAt timestamp
     };
     console.log("New asteroid generated:", newAsteroid); // Logging here
     return [...currentAsteroids, newAsteroid];

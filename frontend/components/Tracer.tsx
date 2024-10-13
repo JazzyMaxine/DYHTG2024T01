@@ -8,9 +8,10 @@ interface TracerProps {
     x2: number
     y2: number
     duration?: number  // Optional duration for how long the tracer remains visible
+      createdAt: Date // Add createdAt timestamp
 }
 
-const Tracer: React.FC<TracerProps> = ({ x1, y1, x2, y2, duration = 100 }) => {
+const Tracer: React.FC<TracerProps> = ({ x1, y1, x2, y2, duration = 100, createdAt }) => {
     const [visible, setVisible] = useState(true);
     const minx = Math.min(x1, x2)
     const miny = Math.min(y1, y2)

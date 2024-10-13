@@ -264,6 +264,13 @@ useEffect(() => {
     }
   };
 
+  
+  // Define explosion and tracer lifespans
+  const EXPLOSION_LIFESPAN = 500; // 500ms
+  const TRACER_LIFESPAN = 300; // 300ms
+  const ASTEROID_LIFESPAN = 5000
+
+
   async function playFire() {
     const { sound } = await Audio.Sound.createAsync(
       require('../../audio/fire.wav')  // Ensure this file exists in the path
@@ -281,50 +288,65 @@ useEffect(() => {
   }
 
 const checkAndHandleAsteroidCollisions = useCallback((rotation: number) => {
-  playFire()
+  playFire();
 
   setAsteroids(prevAsteroids => {
     let scoreDelta = 0; // Track how many asteroids were removed to update the score
     let isUpdated = false;
+
     const updatedAsteroids = prevAsteroids.filter(asteroid => {
       const asteroidAngle = (asteroid.direction * (360 / HEXAGON_SIDES)) - 90;
       const isWithinVicinity = Math.abs((rotation - asteroidAngle + 360) % 360) <= VICINITY_ANGLE;
       const isWithinDistance = asteroid.distance <= MAX_DISTANCE;
 
       if (isWithinVicinity && isWithinDistance) {
-        playDeath()
+        playDeath();
         isUpdated = true;
 
-        const D = MAX_DISTANCE-PERF_DISTANCE
-        let d = Math.abs(asteroid.distance - PERF_DISTANCE)
-        d = d > 33 ? 33 : d
-        scoreDelta += Math.round(100 * (1 - (d/D)**2))
+        const D = MAX_DISTANCE - PERF_DISTANCE;
+        let d = Math.abs(asteroid.distance - PERF_DISTANCE);
+        d = d > 33 ? 33 : d;
+        scoreDelta += Math.round(100 * (1 - (d / D) ** 2));
 
         // Calculate asteroid position based on direction and distance
         const angle = asteroid.direction * Math.PI / 3;
         const asteroidX = centerX + Math.cos(angle) * asteroid.distance;
         const asteroidY = centerY + Math.sin(angle) * asteroid.distance;
-        const tipX = centerX + Math.cos(angle) * 20
-        const tipY = centerY + Math.sin(angle) * 20
+        const tipX = centerX + Math.cos(angle) * 20;
+        const tipY = centerY + Math.sin(angle) * 20;
 
-        // Trigger an explosion at the asteroid's position
-        setExplosions(prevExplosions => [...prevExplosions, { x: asteroidX, y: asteroidY }]);
+        // Add explosion to state with timestamp
+        setExplosions(prevExplosions => [
+          ...prevExplosions, 
+          { x: asteroidX, y: asteroidY, createdAt: Date.now() }
+        ]);
 
-        setTracers(prevTracers => [...prevTracers, { x1: tipX, y1: tipY, x2: asteroidX, y2: asteroidY}])
+        // Add tracer to state with timestamp
+        setTracers(prevTracers => [
+          ...prevTracers, 
+          { x1: tipX, y1: tipY, x2: asteroidX, y2: asteroidY, createdAt: Date.now() }
+        ]);
 
         return false; // Remove this asteroid
       }
+
       return true; // Keep this asteroid
     });
 
     if (!isUpdated) {
-      const direction = (rotation + 90) * HEXAGON_SIDES / 360
+      // No asteroid collision, but we can create a tracer
+      const direction = (rotation + 90) * HEXAGON_SIDES / 360;
       const angle = direction * Math.PI / 3;
-      const tipX = centerX + Math.cos(angle) * 20
-      const tipY = centerY + Math.sin(angle) * 20
-      const tailX = centerX + Math.cos(angle) * MAX_DISTANCE
-      const tailY = centerY + Math.sin(angle) * MAX_DISTANCE
-      setTracers(prevTracers => [...prevTracers, { x1: tipX, y1: tipY, x2: tailX, y2: tailY}])
+      const tipX = centerX + Math.cos(angle) * 20;
+      const tipY = centerY + Math.sin(angle) * 20;
+      const tailX = centerX + Math.cos(angle) * MAX_DISTANCE;
+      const tailY = centerY + Math.sin(angle) * MAX_DISTANCE;
+
+      // Add tracer to state with timestamp
+      setTracers(prevTracers => [
+        ...prevTracers, 
+        { x1: tipX, y1: tipY, x2: tailX, y2: tailY, createdAt: Date.now() }
+      ]);
     }
 
     if (scoreDelta > 0) {
@@ -353,6 +375,49 @@ const handleLayout = useCallback((event: LayoutChangeEvent) => {
   setCenterX(width / 2);
   setCenterY(height / 2);
 }, []);
+
+
+
+// Remove expired explosions
+useEffect(() => {
+  const interval = setInterval(() => {
+    setExplosions(prevExplosions =>
+      prevExplosions.filter(explosion => {
+        return explosion.createdAt && (Date.now() - explosion.createdAt < EXPLOSION_LIFESPAN);
+      })
+    );
+  }, 100); // Check every 100ms
+
+  return () => clearInterval(interval);
+}, []);
+
+// Remove expired asteroids
+useEffect(() => {
+  const interval = setInterval(() => {
+    setAsteroids(prevAsteroids =>
+      prevAsteroids.filter(asteroid => {
+        return asteroid.createdAt && (Date.now() - asteroid.createdAt < ASTEROID_LIFESPAN);
+      })
+    );
+  }, 100); // Check every 100ms
+
+  return () => clearInterval(interval);
+}, []);
+
+// Remove expired tracers
+useEffect(() => {
+  const interval = setInterval(() => {
+    setTracers(prevTracers =>
+      prevTracers.filter(tracer => {
+        return tracer.createdAt && (Date.now() - tracer.createdAt < TRACER_LIFESPAN);
+      })
+    );
+  }, 100); // Check every 100ms
+
+  return () => clearInterval(interval);
+}, []);
+
+
 
   return (
     <TouchableWithoutFeedback onPress={handlePress}>
