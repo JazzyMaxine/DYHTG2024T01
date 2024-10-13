@@ -7,7 +7,6 @@ import { useGame } from '../../contexts/GameContext';
 import * as FileSystem from 'expo-file-system';
 import Hexagon from '../../components/Hexagon';
 import Spaceship from '../../components/Spaceship';
-import { handleShoot } from '../../components/Spaceship';
 import { default as Asteroid, IAsteroid } from '../../components/Asteroid';
 import Explosion from '../../components/Explosion'; // Import the Explosion component
 import Tracer from '../../components/Tracer'; 
@@ -283,12 +282,10 @@ useEffect(() => {
 
 const checkAndHandleAsteroidCollisions = useCallback((rotation: number) => {
   playFire()
-  handleShoot(rotation)
 
   setAsteroids(prevAsteroids => {
     let scoreDelta = 0; // Track how many asteroids were removed to update the score
     let isUpdated = false;
-
     const updatedAsteroids = prevAsteroids.filter(asteroid => {
       const asteroidAngle = (asteroid.direction * (360 / HEXAGON_SIDES)) - 90;
       const isWithinVicinity = Math.abs((rotation - asteroidAngle + 360) % 360) <= VICINITY_ANGLE;
@@ -301,7 +298,7 @@ const checkAndHandleAsteroidCollisions = useCallback((rotation: number) => {
         const D = MAX_DISTANCE-PERF_DISTANCE
         let d = Math.abs(asteroid.distance - PERF_DISTANCE)
         d = d > 33 ? 33 : d
-        scoreDelta += Math.round(100 * (1 - (d/D)**3))
+        scoreDelta += Math.round(100 * (1 - (d/D)**2))
 
         // Calculate asteroid position based on direction and distance
         const angle = asteroid.direction * Math.PI / 3;
