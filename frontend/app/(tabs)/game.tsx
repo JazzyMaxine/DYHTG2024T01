@@ -25,6 +25,8 @@ const ASTEROID_SPAWN_INTERVAL = 2000000; // Spawn every 2 seconds (2000ms)
 export default function GameScreen() {
   const params = useLocalSearchParams(); // Safely access the route parameters
   const beatmapName = params.beatmapName || 'defaultBeatmap'; // Add default fallback
+  const beatmapUri = params.beatmapUri || null;
+  const audioUri = params.audioUri || null;
   const beatmapJson = params.beatmapJson || null;
   const audioUrl = params.audioUrl || null;
 
@@ -97,6 +99,7 @@ useEffect(() => {
   const loadBeatmapAndPlaySound = async () => {
     try {
       if (Platform.OS === 'web') {
+        // Web logic for loading beatmap and audio
         console.log("Web: Received beatmapJson type:", typeof beatmapJson);
 
         // Parse beatmapJson if it's a string
@@ -119,7 +122,7 @@ useEffect(() => {
           console.log("Valid beatmap array:", parsedBeatmapJson.beatmap);
           setCurrentBeatmap(parsedBeatmapJson.beatmap);  // Extract the 'beatmap' array
 
-                    // Extract the BPM and calculate beatInterval
+          // Extract the BPM and calculate beatInterval
           const BASE_BPM = parsedBeatmapJson.bpm;
           const beatInterval = (60 / BASE_BPM) * 1000; // Convert BPM to milliseconds
           console.log(`Base BPM: ${BASE_BPM}, Beat Interval: ${beatInterval}ms`);
@@ -128,7 +131,32 @@ useEffect(() => {
           return;
         }
 
-        const audioFileUri = `${audioDir}${beatmapName}_padded.mp3`;
+        const { sound } = await Audio.Sound.createAsync({ uri: audioUrl });
+        soundInstance = sound;
+        setSound(sound);
+        await sound.playAsync();
+      } else {
+        // Mobile logic for loading beatmap and audio
+        console.log("Mobile: Loading beatmap from local file");
+
+        // Read the beatmap from the local file using beatmapUri
+        const beatmapContent = await FileSystem.readAsStringAsync(beatmapUri); // Use the provided beatmapUri
+        const parsedBeatmapJson = JSON.parse(beatmapContent); // Parse the JSON content
+
+        // Set the current beatmap
+        if (parsedBeatmapJson && Array.isArray(parsedBeatmapJson.beatmap)) {
+          setCurrentBeatmap(parsedBeatmapJson.beatmap);
+
+          // Extract the BPM and calculate beatInterval
+          const BASE_BPM = parsedBeatmapJson.bpm;
+          const beatInterval = (60 / BASE_BPM) * 1000; // Convert BPM to milliseconds
+          console.log(`Base BPM: ${BASE_BPM}, Beat Interval: ${beatInterval}ms`);
+        } else {
+          console.error("Invalid beatmap format");
+          return;
+        }
+
+        // Play the audio from the local file using audioUri
         const { sound } = await Audio.Sound.createAsync({ uri: audioUrl });
         soundInstance = sound;
         setSound(sound);
@@ -149,7 +177,7 @@ useEffect(() => {
       soundInstance.stopAsync().then(() => soundInstance.unloadAsync());
     }
   };
-}, [isFocused, beatmapName, beatmapJson, audioUrl]);
+}, [isFocused, beatmapUri, audioUri]);  // Use beatmapUri and audioUri instead of beatmapName
 
 useEffect(() => {
   let intervalId: NodeJS.Timeout | undefined;
