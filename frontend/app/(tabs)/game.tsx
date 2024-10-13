@@ -247,11 +247,31 @@ useEffect(() => {
     }
   };
 
+  async function playFire() {
+    const { sound } = await Audio.Sound.createAsync(
+      require('../../audio/fire.wav')  // Ensure this file exists in the path
+    );
+    setSound(sound);
+    await sound.playAsync();
+  }
+
+  async function playDeath() {
+    const { sound } = await Audio.Sound.createAsync(
+      require('../../audio/bangSmall.wav')  // Ensure this file exists in the path
+    );
+    setSound(sound);
+    await sound.playAsync();
+  }
+
 const checkAndHandleAsteroidCollisions = useCallback((rotation: number) => {
+  playFire()
+
   setAsteroids(prevAsteroids => {
     let scoreDelta = 0; // Track how many asteroids were removed to update the score
     let isUpdated = false;
     const updatedAsteroids = prevAsteroids.filter(asteroid => {
+      playDeath()
+      
       const asteroidAngle = (asteroid.direction * (360 / HEXAGON_SIDES)) - 90;
       const isWithinVicinity = Math.abs((rotation - asteroidAngle + 360) % 360) <= VICINITY_ANGLE;
       const isWithinDistance = asteroid.distance <= MAX_DISTANCE;
