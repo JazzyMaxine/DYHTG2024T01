@@ -73,6 +73,8 @@ export default function GameScreen() {
   // Effect to handle navigation on collision
   useEffect(() => {
     if (collision) {
+      playDeath()
+      
       const handleSave = async () => {
         try {
           const storedScores = await getStoredScores();
@@ -277,7 +279,25 @@ useEffect(() => {
     }
   };
 
+  async function playFire() {
+    const { sound } = await Audio.Sound.createAsync(
+      require('../../audio/fire.wav')  // Ensure this file exists in the path
+    );
+    setSound(sound);
+    await sound.playAsync();
+  }
+
+  async function playDeath() {
+    const { sound } = await Audio.Sound.createAsync(
+      require('../../audio/bangSmall.wav')  // Ensure this file exists in the path
+    );
+    setSound(sound);
+    await sound.playAsync();
+  }
+
 const checkAndHandleAsteroidCollisions = useCallback((rotation: number) => {
+  playFire()
+
   setAsteroids(prevAsteroids => {
     let scoreDelta = 0; // Track how many asteroids were removed to update the score
     let isUpdated = false;
@@ -287,6 +307,7 @@ const checkAndHandleAsteroidCollisions = useCallback((rotation: number) => {
       const isWithinDistance = asteroid.distance <= MAX_DISTANCE;
 
       if (isWithinVicinity && isWithinDistance) {
+        playDeath()
         isUpdated = true;
         scoreDelta += 1; // Increment score for each removed asteroid
 
