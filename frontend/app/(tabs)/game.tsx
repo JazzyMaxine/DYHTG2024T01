@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Platform } from 'react-native'
 import { useIsFocused } from '@react-navigation/native'; // Import the useIsFocused hook
 import { View, StyleSheet, TouchableWithoutFeedback, LayoutChangeEvent, LayoutRectangle } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useGame } from '../../contexts/GameContext';
+import * as FileSystem from 'expo-file-system';
 import Hexagon from '../../components/Hexagon';
 import Spaceship from '../../components/Spaceship';
 import { default as Asteroid, IAsteroid } from '../../components/Asteroid';
@@ -18,9 +19,14 @@ import { getStoredScores, saveScores } from '../../utils/scoreStorage';
 const HEXAGON_SIDES = 6;
 const BASE_BPM = beatmapS.bpm; // Define the base BPM (e.g., 120 BPM for the song)
 const beatInterval = (60 / BASE_BPM) * 1000; // Convert BPM to milliseconds
-const ASTEROID_SPAWN_INTERVAL = 2000; // Spawn every 2 seconds (2000ms)
+const ASTEROID_SPAWN_INTERVAL = 2000000; // Spawn every 2 seconds (2000ms)
 
 export default function GameScreen() {
+  const params = useLocalSearchParams(); // Safely access the route parameters
+  const beatmapName = params.beatmapName || 'defaultBeatmap'; // Add default fallback
+  const beatmapJson = params.beatmapJson || null;
+  const audioUrl = params.audioUrl || null;
+
   const router = useRouter();
   const {score, updateScore, resetScore } = useGame();
   const [shipRotation, setShipRotation] = useState(0);
@@ -36,7 +42,9 @@ export default function GameScreen() {
   const isFocused = useIsFocused(); // Use the hook to track if the screen is focused
   
   // Access beatmap items
-  const currentBeatmap = beatmapS.beatmap;
+  const beatmapDir = FileSystem.documentDirectory + 'beatmaps/';
+  const audioDir = FileSystem.documentDirectory + 'audio/';
+  const [currentBeatmap, setCurrentBeatmap] = useState(null);
   // Move asteroids
   const moveAsteroidsInLoop = useCallback(() => {
     setAsteroids(prevAsteroids => moveAsteroids(prevAsteroids));
@@ -83,131 +91,124 @@ export default function GameScreen() {
 }, [collision, score, router, resetScore]);
 
 useEffect(() => {
-  let soundInstance: Audio.Sound | null = null;
-  let isPlaying = false; // Flag to track if the sound is already playing
+  let soundInstance = null;
 
-  const loadAndPlaySound = async () => {
+  const loadBeatmapAndPlaySound = async () => {
     try {
-      if (!soundInstance) {
-        const { sound } = await Audio.Sound.createAsync(audioS);
+      if (Platform.OS === 'web') {
+        console.log("Web: Received beatmapJson type:", typeof beatmapJson);
+
+        // Parse beatmapJson if it's a string
+        let parsedBeatmapJson;
+        console.log("BeatmapJson:", beatmapJson);
+        if (typeof beatmapJson === 'string') {
+          try {
+            parsedBeatmapJson = JSON.parse(beatmapJson); // Parse the JSON string into an object
+            console.log("Parsed beatmapJson:", parsedBeatmapJson);
+          } catch (error) {
+            console.error("Error parsing beatmapJson:", error);
+            return; // Stop execution if parsing fails
+          }
+        } else {
+          parsedBeatmapJson = beatmapJson; // Already an object, no need to parse
+        }
+
+        // Check if the parsed object contains a valid beatmap array
+        if (parsedBeatmapJson && Array.isArray(parsedBeatmapJson.beatmap)) {
+          console.log("Valid beatmap array:", parsedBeatmapJson.beatmap);
+          setCurrentBeatmap(parsedBeatmapJson.beatmap);  // Extract the 'beatmap' array
+
+                    // Extract the BPM and calculate beatInterval
+          const BASE_BPM = parsedBeatmapJson.bpm;
+          const beatInterval = (60 / BASE_BPM) * 1000; // Convert BPM to milliseconds
+          console.log(`Base BPM: ${BASE_BPM}, Beat Interval: ${beatInterval}ms`);
+        } else {
+          console.error("Invalid beatmapJson format, expected an object with a 'beatmap' array:", parsedBeatmapJson);
+          return;
+        }
+
+        const audioFileUri = `${audioDir}${beatmapName}_padded.mp3`;
+        const { sound } = await Audio.Sound.createAsync({ uri: audioUrl });
         soundInstance = sound;
         setSound(sound);
-
-        // Set playback status update to track progress
-        sound.setOnPlaybackStatusUpdate((status) => {
-          if (status.isLoaded) {
-            if (status.didJustFinish) {
-              console.log('Sound finished playing.');
-              isPlaying = false;
-            } else if (status.isPlaying && !isPlaying) {
-              console.log('Sound started playing.');
-              isPlaying = true;
-            } else if (!status.isPlaying && isPlaying) {
-              console.log('Sound paused or stopped.');
-              isPlaying = false;
-            }
-          } else if (status.error) {
-            // Handle the case where the sound failed to load or encountered an error
-            console.error(`Sound error: ${status.error}`);
-          }
-        });
-
-        // Play audio only when it's loaded
-        const status = await sound.getStatusAsync();
-        if (status.isLoaded && !isPlaying) {
-          await sound.playAsync();
-          isPlaying = true;
-        }
+        await sound.playAsync();
       }
     } catch (error) {
-      console.error('Failed to play audio', error);
-    }
-  };
-
-  const stopSound = async () => {
-    if (soundInstance) {
-      try {
-        const status = await soundInstance.getStatusAsync();
-
-        if (status.isLoaded && isPlaying) {
-          if (status.isPlaying) {
-            await soundInstance.stopAsync();
-          }
-          await soundInstance.unloadAsync(); // Unload only if it's loaded
-          isPlaying = false;
-        }
-      } catch (error) {
-        console.error('Error during sound cleanup:', error);
-      }
+      console.error('Failed to load beatmap or audio:', error);
     }
   };
 
   if (isFocused) {
-    // Load and play audio when the screen is focused
-    loadAndPlaySound();
-  } else {
-    // Stop and unload the sound when the screen is blurred
-    stopSound();
+    loadBeatmapAndPlaySound(); // Load and play sound when screen is focused
   }
 
-  // Cleanup function to unload sound on component unmount
   return () => {
-    stopSound();
+    // Clean up: Stop and unload the sound when the screen is blurred or unmounted
+    if (soundInstance) {
+      soundInstance.stopAsync().then(() => soundInstance.unloadAsync());
+    }
   };
-}, [isFocused]); // Depend only on `isFocused` to ensure proper loading/unloading
+}, [isFocused, beatmapName, beatmapJson, audioUrl]);
 
 useEffect(() => {
-    let intervalId: NodeJS.Timeout | undefined;
-    let timeoutId: NodeJS.Timeout | undefined;
+  let intervalId: NodeJS.Timeout | undefined;
+  let timeoutId: NodeJS.Timeout | undefined;
 
-    if (isFocused) {
+  if (isFocused) {
+    // Reset state when the screen gains focus
+    setAsteroids([]); // Clear asteroids
+    setExplosions([]); // Clear explosions
+    setCurrentIndex(0); // Reset the beatmap index
+    resetScore(); // Reset the score
+    setCollision(false); // Reset collision state
 
-      // Reset state when the screen gains focus
-      setAsteroids([]); // Clear asteroids
-      setExplosions([]); // Clear explosions
-      setCurrentIndex(0); // Reset the beatmap index
-      resetScore(); // Reset the score
-      setCollision(false); // Reset collision state
+    console.log(centerX, centerY, "Current Beatmap:", currentBeatmap);
+    if (centerX !== null && centerY !== null && currentBeatmap) {
+      // Start the game loop when the screen is focused
+      intervalId = setInterval(gameLoop, 50); // Run game logic every 50ms
 
-      if (centerX !== null && centerY !== null && beatmapS && currentBeatmap) {
-        // Start the game loop when the screen is focused
-        intervalId = setInterval(gameLoop, 50); // Run game logic every 50ms
-
-        // Start asteroid spawning based on the beatmap
-        const spawnAsteroid = () => {
+      // Start asteroid spawning based on the beatmap
+      const spawnAsteroid = () => {
+        setCurrentIndex((prevIndex) => {
+          const nextIndex = (prevIndex + 1) % currentBeatmap.length;
+          console.log("CurrentIndex:", nextIndex, currentBeatmap[nextIndex]);
           setAsteroids(prevAsteroids => generateAsteroids(prevAsteroids)); // Generate asteroids
 
-          // Move to the next beat subdivision in the beatmap
-          setCurrentIndex((prevIndex) => (prevIndex + 1) % currentBeatmap.length);
-          const nextSpawnTime = beatInterval * currentBeatmap[currentIndex]; // Adjust timing based on beatmap value
+          const nextSpawnTime = beatInterval * currentBeatmap[prevIndex]; // Adjust timing based on beatmap value
+          console.log('Current beatmap index:', nextIndex);
+          console.log('Current beatmap value:', currentBeatmap[prevIndex]);
+          console.log('Next asteroid spawn in:', nextSpawnTime, 'ms');
 
-          // Schedule the next asteroid spawn
-          timeoutId = setTimeout(spawnAsteroid, nextSpawnTime);
-        };
+          if (!isNaN(nextSpawnTime)) {
+            timeoutId = setTimeout(spawnAsteroid, nextSpawnTime); // Schedule next spawn
+          }
+          return nextIndex;
+        });
+      };
 
-        // Start spawning asteroids
-        const initialSpawnTime = beatInterval * currentBeatmap[currentIndex];
-        timeoutId = setTimeout(spawnAsteroid, initialSpawnTime);
-      }
-    } else {
-      // Screen is blurred, stop game logic and clear timers
-      if (intervalId) clearInterval(intervalId);
-      if (timeoutId) clearTimeout(timeoutId);
+      // Start spawning asteroids based on the beatmap
+      const initialSpawnTime = beatInterval * currentBeatmap[currentIndex];
+      timeoutId = setTimeout(spawnAsteroid, initialSpawnTime);
     }
+  } else {
+    // Screen is blurred, stop game logic and clear timers
+    if (intervalId) clearInterval(intervalId);
+    if (timeoutId) clearTimeout(timeoutId);
+  }
 
-    // Clean up when the component unmounts or screen loses focus
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [isFocused, centerX, centerY, gameLoop, beatInterval, currentBeatmap]);
+  // Clean up when the component unmounts or screen loses focus
+  return () => {
+    if (intervalId) clearInterval(intervalId);
+    if (timeoutId) clearTimeout(timeoutId);
+  };
+}, [isFocused, centerX, centerY, gameLoop, beatInterval, currentBeatmap]);
 
   // Asteroid spawning interval
   useEffect(() => {
     if (centerX !== null && centerY !== null) {
       const spawnInterval = setInterval(() => {
         setAsteroids(prevAsteroids => generateAsteroids(prevAsteroids, centerX, centerY)); // Generate new asteroids at a specific interval
-      }, ASTEROID_SPAWN_INTERVAL);
+      }, ASTEROID_SPAWN_INTERVAL); //TODO REMOVE
       
       return () => clearInterval(spawnInterval); // Clean up interval on unmount
     }
