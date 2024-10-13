@@ -1,7 +1,7 @@
 import argparse
 from pydub import AudioSegment
 
-def pad_audio(input_file, output_file, pad_duration=800):
+def pad_audio(input_file, output_file, pad_duration=0):
     # Load your MP3 file
     audio = AudioSegment.from_mp3(input_file)
 

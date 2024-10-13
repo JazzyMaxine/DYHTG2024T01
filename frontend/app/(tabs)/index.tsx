@@ -42,7 +42,6 @@ const downloadBeatmap = async (beatmapName) => {
     const { beatmap_json, audio_file_url } = await response.json();
 
     // Add logging to ensure audio_file_url is not null
-    console.log('Received audio_file_url:', audio_file_url);
 
     if (!audio_file_url) {
       console.error('Error: audio_file_url is null or undefined');
@@ -52,7 +51,6 @@ const downloadBeatmap = async (beatmapName) => {
 
 if (Platform.OS === 'web') {
   // Web: Log the received object and route directly
-  console.log('Web: Received beatmap_json:', beatmap_json);
   const encodedBeatmapJson = encodeURIComponent(JSON.stringify(beatmap_json));
 
   // Pass beatmapJson and audioUrl via the router
@@ -75,9 +73,6 @@ if (Platform.OS === 'web') {
     const downloadedAudio = await FileSystem.downloadAsync(audio_file_url, audioFileUri);
 
     // Logging the file paths for debugging
-    console.log('Files saved:');
-    console.log('Beatmap:', beatmapFileUri);
-    console.log('Audio:', downloadedAudio.uri);
 
     // Pass the local URIs to the game screen
     router.push({

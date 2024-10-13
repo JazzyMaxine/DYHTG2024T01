@@ -5,10 +5,37 @@ import zipfile
 from pydub import AudioSegment
 from pathlib import Path
 import numpy as np
+import matplotlib.pyplot as plt
 
 # Set the folder where your MP3 files are located
 AUDIO_INPUT_FOLDER = 'unconvertedAudio'
 OUTPUT_FOLDER = 'output_beatmap'
+
+
+def isolate_loudest_frequencies(y, sr, top_n=10):
+    """
+    Isolate the top N loudest frequency bands in the audio using STFT.
+    """
+    # Perform short-time Fourier transform to get the frequency representation
+    stft = librosa.stft(y)
+
+    # Convert the amplitude spectrogram to decibels (loudness)
+    db_stft = librosa.amplitude_to_db(np.abs(stft), ref=np.max)
+
+    # Sum across time to get the overall loudness of each frequency bin
+    mean_db_per_freq = np.mean(db_stft, axis=1)
+
+    # Get the indices of the top N loudest frequencies
+    loudest_indices = np.argsort(mean_db_per_freq)[-top_n:]
+
+    # Create a mask to isolate only the top N frequency bands
+    stft_loudest = np.zeros_like(stft)
+    stft_loudest[loudest_indices, :] = stft[loudest_indices, :]
+
+    # Convert back to time-domain signal using inverse STFT
+    y_loudest = librosa.istft(stft_loudest)
+
+    return y_loudest
 
 
 def analyze_mp3(mp3_file_path):
@@ -19,10 +46,13 @@ def analyze_mp3(mp3_file_path):
 
     # Load the MP3 file using librosa
     y, sr = librosa.load(mp3_file_path, sr=None)
+
+    # Use Harmonic-Percussive Source Separation (HPSS)
+    y_harmonic, y_percussive = librosa.effects.hpss(y)
     
-    # Perform beat tracking to get beats and BPM
-    tempo, beats = librosa.beat.beat_track(y=y, sr=sr)
-    
+    # Perform beat tracking using the percussive part of the audio
+    tempo, beats = librosa.beat.beat_track(y=y_harmonic, sr=sr)
+
     # Convert beats (in frames) to time (in seconds)
     beat_times = librosa.frames_to_time(beats, sr=sr)
 
@@ -34,15 +64,19 @@ def analyze_mp3(mp3_file_path):
 
 def generate_beatmap(tempo, beat_times, metadata):
     """
-    Generate a basic beatmap based on the analyzed beats and metadata.
-    The beatmap is stored as a dictionary, simulating a simplified `.osu` file.
+    Generate a beatmap based on the analyzed beats.
+    Instead of cumulative times, calculate the intervals between beats.
     """
+    # Calculate time intervals between each beat
+    beat_intervals = np.diff(beat_times).tolist()
+
+    # Create the beatmap object with metadata, bpm, and intervals
     beatmap = {
         "metadata": metadata,
         "bpm": tempo,
-        "beatmap": [round(beat_time, 3) for beat_time in beat_times]  # Rounded to 3 decimal places
+        "beatmap": [round(interval, 3) for interval in beat_intervals]  # Rounded to 3 decimal places
     }
-    
+
     return beatmap
 
 

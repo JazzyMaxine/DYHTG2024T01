@@ -102,15 +102,12 @@ useEffect(() => {
     try {
       if (Platform.OS === 'web') {
         // Web logic for loading beatmap and audio
-        console.log("Web: Received beatmapJson type:", typeof beatmapJson);
 
         // Parse beatmapJson if it's a string
         let parsedBeatmapJson;
-        console.log("BeatmapJson:", beatmapJson);
         if (typeof beatmapJson === 'string') {
           try {
             parsedBeatmapJson = JSON.parse(beatmapJson); // Parse the JSON string into an object
-            console.log("Parsed beatmapJson:", parsedBeatmapJson);
           } catch (error) {
             console.error("Error parsing beatmapJson:", error);
             return; // Stop execution if parsing fails
@@ -121,13 +118,11 @@ useEffect(() => {
 
         // Check if the parsed object contains a valid beatmap array
         if (parsedBeatmapJson && Array.isArray(parsedBeatmapJson.beatmap)) {
-          console.log("Valid beatmap array:", parsedBeatmapJson.beatmap);
           setCurrentBeatmap(parsedBeatmapJson.beatmap);  // Extract the 'beatmap' array
 
           // Extract the BPM and calculate beatInterval
           const BASE_BPM = parsedBeatmapJson.bpm;
           const beatInterval = (60 / BASE_BPM) * 1000; // Convert BPM to milliseconds
-          console.log(`Base BPM: ${BASE_BPM}, Beat Interval: ${beatInterval}ms`);
         } else {
           console.error("Invalid beatmapJson format, expected an object with a 'beatmap' array:", parsedBeatmapJson);
           return;
@@ -139,7 +134,6 @@ useEffect(() => {
         await sound.playAsync();
       } else {
         // Mobile logic for loading beatmap and audio
-        console.log("Mobile: Loading beatmap from local file");
 
         // Read the beatmap from the local file using beatmapUri
         const beatmapContent = await FileSystem.readAsStringAsync(beatmapUri); // Use the provided beatmapUri
@@ -152,7 +146,6 @@ useEffect(() => {
           // Extract the BPM and calculate beatInterval
           const BASE_BPM = parsedBeatmapJson.bpm;
           const beatInterval = (60 / BASE_BPM) * 1000; // Convert BPM to milliseconds
-          console.log(`Base BPM: ${BASE_BPM}, Beat Interval: ${beatInterval}ms`);
         } else {
           console.error("Invalid beatmap format");
           return;
@@ -193,7 +186,6 @@ useEffect(() => {
     resetScore(); // Reset the score
     setCollision(false); // Reset collision state
 
-    console.log(centerX, centerY, "Current Beatmap:", currentBeatmap);
     if (centerX !== null && centerY !== null && currentBeatmap) {
       // Start the game loop when the screen is focused
       intervalId = setInterval(gameLoop, 50); // Run game logic every 50ms
@@ -202,13 +194,9 @@ useEffect(() => {
       const spawnAsteroid = () => {
         setCurrentIndex((prevIndex) => {
           const nextIndex = (prevIndex + 1) % currentBeatmap.length;
-          console.log("CurrentIndex:", nextIndex, currentBeatmap[nextIndex]);
           setAsteroids(prevAsteroids => generateAsteroids(prevAsteroids)); // Generate asteroids
 
           const nextSpawnTime = beatInterval * currentBeatmap[prevIndex]; // Adjust timing based on beatmap value
-          console.log('Current beatmap index:', nextIndex);
-          console.log('Current beatmap value:', currentBeatmap[prevIndex]);
-          console.log('Next asteroid spawn in:', nextSpawnTime, 'ms');
 
           if (!isNaN(nextSpawnTime)) {
             timeoutId = setTimeout(spawnAsteroid, nextSpawnTime); // Schedule next spawn
@@ -259,7 +247,6 @@ useEffect(() => {
     pageX -= layout.left;
     pageY -= layout.top;
   // Log adjusted coordinates
-  console.log('Adjusted touch coordinates:', pageX, pageY);
 
   // Calculate the angle of the touch event relative to the center
   let angle = Math.atan2(pageY - centerY, pageX - centerX);
