@@ -22,6 +22,7 @@ Path(TEMP_DIR).mkdir(exist_ok=True)
 
 # Global variable to store the list of available beatmaps
 available_beatmaps = []
+ip='localhost'
 
 # Function to list available .osz files on server start
 def list_beatmaps():
@@ -108,7 +109,7 @@ def download_beatmap(beatmap_name):
             
             return jsonify({
                 "beatmap_json": beatmap_data,  # Send actual content, not the filename
-                "audio_file_url": f"http://localhost:5000/download/{beatmap_base_name}_padded.mp3"  # Correct URL
+                "audio_file_url": f"http://{ip}:5000/download/{beatmap_base_name}_padded.mp3"  # Correct URL
             })
 
         # If not cached, process and cache the beatmap
@@ -123,7 +124,7 @@ def download_beatmap(beatmap_name):
             
             return jsonify({
                 "beatmap_json": beatmap_data,
-                "audio_file_url": f"http://localhost:5000/download/{beatmap_base_name}_padded.mp3"
+                "audio_file_url": f"http://{ip}:5000/download/{beatmap_base_name}_padded.mp3"
             })
         else:
             return jsonify({"error": "Failed to process beatmap"}), 500
