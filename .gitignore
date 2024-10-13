@@ -25,3 +25,4 @@ backend/temp_files/
 
 expo-env.d.ts
 # @end expo-cli
+node_modules
