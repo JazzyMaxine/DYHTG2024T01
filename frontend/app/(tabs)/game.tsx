@@ -74,7 +74,7 @@ export default function GameScreen() {
   useEffect(() => {
     if (collision) {
       playDeath()
-      
+
       const handleSave = async () => {
         try {
           const storedScores = await getStoredScores();
@@ -247,6 +247,7 @@ useEffect(() => {
 
   const VICINITY_ANGLE = 30; // ±30 degrees around the hexagon side
   const MAX_DISTANCE = 120; // The max distance where a collision with the hexagon side can occur (adjust this based on the size of the hexagon)
+  const PERF_DISTANCE = 87;
 
   const handlePress = (event: any) => {
   if (centerX === null || centerY === null) return;
@@ -255,17 +256,13 @@ useEffect(() => {
   // Log touch event coordinates to debug
 
   // Adjust for the layout offset
-// Use Platform.OS to check if running on mobile or web
+  // Use Platform.OS to check if running on mobile or web
     pageX -= layout.left;
     pageY -= layout.top;
-  // Log adjusted coordinates
-  console.log('Adjusted touch coordinates:', pageX, pageY);
-
   // Calculate the angle of the touch event relative to the center
   let angle = Math.atan2(pageY - centerY, pageX - centerX);
 
   // Make sure the angle calculation is valid (log to debug)
-  console.log('Calculated angle:', angle);
     const direction = Math.floor((angle - Math.PI / HEXAGON_SIDES) / (2 * Math.PI / HEXAGON_SIDES) - 1) % HEXAGON_SIDES;
     const newRotation = (direction * (360 / HEXAGON_SIDES)) + 30;
 
@@ -309,7 +306,11 @@ const checkAndHandleAsteroidCollisions = useCallback((rotation: number) => {
       if (isWithinVicinity && isWithinDistance) {
         playDeath()
         isUpdated = true;
-        scoreDelta += 1; // Increment score for each removed asteroid
+
+        const D = MAX_DISTANCE-PERF_DISTANCE
+        let d = Math.abs(asteroid.distance - PERF_DISTANCE)
+        d = d > 33 ? 33 : d
+        scoreDelta += Math.round(100 * (1 - (d/D)**2))
 
         // Calculate asteroid position based on direction and distance
         const angle = asteroid.direction * Math.PI / 3;
@@ -381,7 +382,6 @@ const handleLayout = useCallback((event: LayoutChangeEvent) => {
                 spaceshipX={centerX}
                 spaceshipY={centerY}
                 points={asteroid.points}
-                onPress={() => handleAsteroidPress(asteroid.id)}
               />
             ))}
             {explosions.map((explosion, index) => (
