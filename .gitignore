@@ -13,9 +13,9 @@ web-build/
 node_modules
 
 backend/cache/
+backend/__pycache__/
 backend/temp_files/
-
-
+DYHTG2024T01/
 
 # macOS
 .DS_Store
