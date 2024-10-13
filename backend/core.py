@@ -22,7 +22,7 @@ Path(TEMP_DIR).mkdir(exist_ok=True)
 
 # Global variable to store the list of available beatmaps
 available_beatmaps = []
-ip='172.20.10.4'
+ip='localhost' #172.20.10.4 
 
 # Function to list available .osz files on server start
 def list_beatmaps():

@@ -14,7 +14,7 @@ export default function HomeScreen() {
   // Directory paths (only for mobile)
   const beatmapDir = FileSystem.documentDirectory + 'beatmaps/';
   const audioDir = FileSystem.documentDirectory + 'audio/';
-  const iP='172.20.10.4'
+  const iP='localhost' // 172.20.10.4
 
   // Fetch available beatmaps from the server
   useEffect(() => {
