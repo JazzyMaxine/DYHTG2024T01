@@ -14,10 +14,11 @@ export default function HomeScreen() {
   // Directory paths (only for mobile)
   const beatmapDir = FileSystem.documentDirectory + 'beatmaps/';
   const audioDir = FileSystem.documentDirectory + 'audio/';
+  const iP='localhost' // 172.20.10.4
 
   // Fetch available beatmaps from the server
   useEffect(() => {
-    fetch('http://localhost:5000/list_beatmaps')
+    fetch(`http://${iP}:5000/list_beatmaps`)
       .then(response => response.json())
       .then(data => setBeatmaps(data.beatmaps))
       .catch(error => console.error('Error fetching beatmaps:', error));
@@ -37,7 +38,7 @@ const downloadBeatmap = async (beatmapName) => {
     setDownloading(beatmapName);
 
     // Fetch the beatmap JSON and audio URL from the server
-    const response = await fetch(`http://localhost:5000/download_beatmap/${beatmapName}`);
+    const response = await fetch(`http://${iP}:5000/download_beatmap/${beatmapName}`);
     const { beatmap_json, audio_file_url } = await response.json();
 
     // Add logging to ensure audio_file_url is not null
@@ -49,26 +50,54 @@ const downloadBeatmap = async (beatmapName) => {
       return;
     }
 
-    if (Platform.OS === 'web') {
-      // Log the actual received object
-      console.log('Web: Received beatmap_json:', beatmap_json);
-      const encodedBeatmapJson = encodeURIComponent(JSON.stringify(beatmap_json));
+if (Platform.OS === 'web') {
+  // Web: Log the received object and route directly
+  console.log('Web: Received beatmap_json:', beatmap_json);
+  const encodedBeatmapJson = encodeURIComponent(JSON.stringify(beatmap_json));
 
-      // Pass beatmapJson and audioUrl via the router
-      router.push({ pathname: '/game', params: { beatmapName, beatmapJson: encodedBeatmapJson, audioUrl: audio_file_url } });
-    } else {
-      // Mobile platform logic (saving the file locally)
-      const beatmapFileUri = beatmapDir + beatmapName + '.json';
-      await FileSystem.writeAsStringAsync(beatmapFileUri, JSON.stringify(beatmap_json));
+  // Pass beatmapJson and audioUrl via the router
+  router.push({
+    pathname: '/game',
+    params: { beatmapName, beatmapJson: encodedBeatmapJson, audioUrl: audio_file_url }
+  });
+} else {
+  // Mobile platform: Save files locally and pass the file URIs to the game screen
+  try {
+    // Define paths to store the beatmap JSON and audio files
+    const sanitizedBeatmapName = beatmapName.replace('.osz', '');
+    const beatmapFileUri = `${beatmapDir}${sanitizedBeatmapName}.json`;
+    const audioFileUri = `${audioDir}${sanitizedBeatmapName}_padded.mp3`;
 
-      const audioFileUri = audioDir + beatmapName + '_padded.mp3';
-      await FileSystem.downloadAsync(audio_file_url, audioFileUri);
+    // Save the beatmap JSON file
+    await FileSystem.writeAsStringAsync(beatmapFileUri, JSON.stringify(beatmap_json));
 
-      setDownloading(null);
-      alert('Download complete!');
-      
-      router.push({ pathname: '/game', params: { beatmapName } });
-    }
+    // Download and save the audio file
+    const downloadedAudio = await FileSystem.downloadAsync(audio_file_url, audioFileUri);
+
+    // Logging the file paths for debugging
+    console.log('Files saved:');
+    console.log('Beatmap:', beatmapFileUri);
+    console.log('Audio:', downloadedAudio.uri);
+
+    // Pass the local URIs to the game screen
+    router.push({
+      pathname: '/game',
+      params: {
+        beatmapName: sanitizedBeatmapName,
+        beatmapUri: beatmapFileUri,
+        audioUri: downloadedAudio.uri,  // Use the local file URI for audio
+        audioUrl: audio_file_url
+      }
+    });
+
+    // Reset the downloading state and show a confirmation alert
+    setDownloading(null);
+    alert('Download complete!');
+  } catch (error) {
+    console.error('Error saving files:', error);
+    setDownloading(null);
+  }
+}
   } catch (error) {
     console.error('Error downloading beatmap:', error);
     setDownloading(null);

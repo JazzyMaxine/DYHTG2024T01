@@ -43,7 +43,7 @@ def parse_osu_file(osu_file_path):
                 bpm = 60000 / beat_length  # Convert beat length to BPM
                 break
 
-    bpm = 0.408
+    bpm = 0.408 * bpm
     # Process HitObjects to get the raw time differences (accurate to the melody)
     last_time = 0
 
