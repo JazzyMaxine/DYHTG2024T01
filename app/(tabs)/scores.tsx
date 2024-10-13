@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useGame } from '../../contexts/GameContext';
 import { getStoredScores, saveScores } from '../../utils/scoreStorage';
+import { useFocusEffect } from '@react-navigation/native';
 
 export type ScoreScreenProps = {
   highScoreList: number[];
@@ -10,21 +11,28 @@ export type ScoreScreenProps = {
 const ScoresScreen: React.FC = () => {
     const [scores, setScores] = useState<number[]>([50,40,30,20,10]); // default scores
 
-    useEffect(() => {
-      const loadScores = async () => {
-        try {
-          const storedScores = await getStoredScores();
-          if (storedScores.length > 0) {
-            setScores(storedScores);
-          }
-        } catch (error) {
-          console.error('Error loading scores:', error);
+    const loadScores = async () => {
+      try {
+        const storedScores = await getStoredScores();
+        console.warn(storedScores)
+        if (storedScores.length > 0) {
+          setScores(storedScores);
         }
-      };
-  
+      } catch (error) {
+        console.error('Error loading scores:', error);
+      }
+    };
+
+    useEffect(() => {
       loadScores();
     }, []);
 
+
+    useFocusEffect(
+      useCallback(() => {
+        loadScores()
+      }, [])
+    );
 
     const topScores = scores.slice(0, 5);
 
@@ -43,6 +51,7 @@ const ScoresScreen: React.FC = () => {
     </View>
   );
 };
+
 export default ScoresScreen;
 
 const styles = StyleSheet.create({

@@ -12,7 +12,7 @@ import Tracer from '../../components/Tracer';
 import { generateAsteroids, moveAsteroids, checkCollisions } from '../../utils/gameLogic';
 import { Audio } from 'expo-av'; // Import Audio module from expo-av
 import beatmapS from '../../beatmaps/beatmap.json'; // Statically import the beatmap
-import audioS from '../../audio/beatmap.mp3'
+import audioS from '../../audio/beatmap.mp3';
 import { getStoredScores, saveScores } from '../../utils/scoreStorage';
 
 const HEXAGON_SIDES = 6;
@@ -26,6 +26,7 @@ export default function GameScreen() {
   const [shipRotation, setShipRotation] = useState(0);
   const [explosions, setExplosions] = useState<Array<{ x: number, y: number }>>([]); // Track active explosions
   const [tracers, setTracers] = useState<Array<{}>>([]);
+  const [asteroids, setAsteroids] = useState<Array<IAsteroid>>([]);
   const [centerX, setCenterX] = useState<number | null>(null);
   const [centerY, setCenterY] = useState<number | null>(null);
   const [collision, setCollision] = useState(false); // Track if a collision occurred
