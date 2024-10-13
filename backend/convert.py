@@ -35,32 +35,33 @@ def parse_osu_file(osu_file_path):
                 # Hit objects give timing information for beats
                 hit_objects.append(line.split(','))
 
-    # Extract BPM from timing points (use the first timing point for BPM)
+    # Extract BPM from the first timing point or the most relevant one
     if timing_points:
-        beat_length = float(timing_points[0][1])  # 1st entry's beat length
-        bpm = 60000 / beat_length  # Convert to BPM
+        for point in timing_points:
+            if len(point) > 1 and float(point[1]) > 0:
+                beat_length = float(point[1])  # 1st valid timing point's beat length
+                bpm = 60000 / beat_length  # Convert beat length to BPM
+                break
 
-    # Process HitObjects to get core rhythm based on BPM
-    beat_interval = 60000 / bpm  # Milliseconds per beat
+    bpm = 0.408
+    # Process HitObjects to get the raw time differences (accurate to the melody)
     last_time = 0
 
     for obj in hit_objects:
-        time = int(obj[2])
+        time = int(obj[2])  # Get the hit object's time (in milliseconds)
         if last_time > 0:
-            time_diff = time - last_time
-            beat_division = round(time_diff / beat_interval, 2)
-            beatmap.append(beat_division)
+            time_diff = time - last_time  # Calculate time difference between notes
+            beatmap.append(time_diff / 1000)  # Store in seconds for better readability
         last_time = time
 
-    # Create the final JSON structure
+    # Create the final JSON structure with metadata, BPM, and precise timings
     beatmap_data = {
         "metadata": metadata,
         "bpm": bpm,
-        "beatmap": beatmap
+        "beatmap": beatmap  # This contains raw timing differences in seconds
     }
     
     return beatmap_data
-
 
 def save_to_json(data, output_file_path):
     with open(output_file_path, 'w', encoding='utf-8') as json_file:
@@ -78,4 +79,3 @@ def save_to_json(data, output_file_path):
 # save_to_json(beatmap_data, output_file_path)
 
 # print(f"Beatmap data saved to {output_file_path}")
-
