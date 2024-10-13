@@ -15,6 +15,7 @@ import { Audio } from 'expo-av'; // Import Audio module from expo-av
 import beatmapS from '../../beatmaps/beatmap.json'; // Statically import the beatmap
 import audioS from '../../audio/beatmap.mp3';
 import { getStoredScores, saveScores } from '../../utils/scoreStorage';
+import CurrentScoreBox from '@/components/CurrentScoreBox';
 
 const HEXAGON_SIDES = 6;
 const BASE_BPM = beatmapS.bpm; // Define the base BPM (e.g., 120 BPM for the song)
@@ -342,6 +343,10 @@ const handleLayout = useCallback((event: LayoutChangeEvent) => {
             ))}
           </>
         )}
+        {/* Note, box doesn't expand to fit numbers in the thousands but it's fine */}
+        <View style={styles.currentScoreBox}>
+          <CurrentScoreBox score={score} />
+        </View>
       </View>
     </TouchableWithoutFeedback>
   );
@@ -353,5 +358,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
-  }
+  },
+  currentScoreBox: {
+    position: 'absolute',
+    bottom: 10,
+    left: 10,
+  },
 });
