@@ -3,7 +3,6 @@ frontend/.expo/
 frontend/dist/
 **/venv
 .venv
-.env
 npm-debug.*
 *.jks
 *.p8

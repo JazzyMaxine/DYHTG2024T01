@@ -1,9 +1,6 @@
 frontend/node_modules/
 frontend/.expo/
 frontend/dist/
-**/venv
-.venv
-.env
 npm-debug.*
 *.jks
 *.p8
@@ -28,4 +25,3 @@ backend/temp_files/
 
 expo-env.d.ts
 # @end expo-cli
-node_modules
