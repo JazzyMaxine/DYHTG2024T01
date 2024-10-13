@@ -12,7 +12,8 @@ import Tracer from '../../components/Tracer';
 import { generateAsteroids, moveAsteroids, checkCollisions } from '../../utils/gameLogic';
 import { Audio } from 'expo-av'; // Import Audio module from expo-av
 import beatmapS from '../../beatmaps/beatmap.json'; // Statically import the beatmap
-import audioS from '../../audio/beatmap.mp3'
+import audioS from '../../audio/beatmap.mp3';
+import { getStoredScores, saveScores } from '../../utils/scoreStorage';
 
 const HEXAGON_SIDES = 6;
 const BASE_BPM = beatmapS.bpm; // Define the base BPM (e.g., 120 BPM for the song)
@@ -21,11 +22,11 @@ const ASTEROID_SPAWN_INTERVAL = 2000; // Spawn every 2 seconds (2000ms)
 
 export default function GameScreen() {
   const router = useRouter();
-  const { score, updateScore, resetScore } = useGame();
+  const {score, updateScore, resetScore } = useGame();
   const [shipRotation, setShipRotation] = useState(0);
-  const [asteroids, setAsteroids] = useState<Array<IAsteroid>>([]);
   const [explosions, setExplosions] = useState<Array<{ x: number, y: number }>>([]); // Track active explosions
   const [tracers, setTracers] = useState<Array<{}>>([]);
+  const [asteroids, setAsteroids] = useState<Array<IAsteroid>>([]);
   const [centerX, setCenterX] = useState<number | null>(null);
   const [centerY, setCenterY] = useState<number | null>(null);
   const [collision, setCollision] = useState(false); // Track if a collision occurred
@@ -61,10 +62,25 @@ export default function GameScreen() {
   // Effect to handle navigation on collision
   useEffect(() => {
     if (collision) {
-      router.push('/scores'); // Navigate to the scores screen
-    }
-  }, [collision, router]);
+      const handleSave = async () => {
+        try {
+          const storedScores = await getStoredScores();
+          const newScores = [...storedScores, score].sort((a, b) => b - a);
+  
+          // Save the updated score list
+          await saveScores(newScores);
+          resetScore();
 
+          router.push('/scores');
+        } catch (error) {
+          console.error('Error saving scores:', error);
+        }
+      };
+  
+      handleSave();
+      setCollision(false); // Reset collision state after handling it
+    }
+}, [collision, score, router, resetScore]);
 
 useEffect(() => {
   let soundInstance: Audio.Sound | null = null;
@@ -314,7 +330,7 @@ const handleLayout = useCallback((event: LayoutChangeEvent) => {
                 spaceshipX={centerX}
                 spaceshipY={centerY}
                 points={asteroid.points}
-                onPress={() => {}}
+                onPress={() => handleAsteroidPress(asteroid.id)}
               />
             ))}
             {explosions.map((explosion, index) => (
@@ -336,5 +352,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
-  },
+  }
 });
