@@ -14,11 +14,11 @@ export default function HomeScreen() {
   // Directory paths (only for mobile)
   const beatmapDir = FileSystem.documentDirectory + 'beatmaps/';
   const audioDir = FileSystem.documentDirectory + 'audio/';
-  const IP='localhost'
+  const iP='localhost'
 
   // Fetch available beatmaps from the server
   useEffect(() => {
-    fetch(`http://${IP}:5000/list_beatmaps`)
+    fetch(`http://${iP}:5000/list_beatmaps`)
       .then(response => response.json())
       .then(data => setBeatmaps(data.beatmaps))
       .catch(error => console.error('Error fetching beatmaps:', error));
@@ -38,7 +38,7 @@ const downloadBeatmap = async (beatmapName) => {
     setDownloading(beatmapName);
 
     // Fetch the beatmap JSON and audio URL from the server
-    const response = await fetch(`http://${IP}:5000/download_beatmap/${beatmapName}`);
+    const response = await fetch(`http://${iP}:5000/download_beatmap/${beatmapName}`);
     const { beatmap_json, audio_file_url } = await response.json();
 
     // Add logging to ensure audio_file_url is not null
