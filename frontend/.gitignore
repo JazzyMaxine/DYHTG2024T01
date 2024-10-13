@@ -11,6 +11,11 @@ npm-debug.*
 web-build/
 .vscode
 
+backend/cache/
+backend/temp_files/
+
+
+
 # macOS
 .DS_Store
 
